@@ -11,7 +11,7 @@ import LoomForm from '@/components/design/LoomForm'
 import CalcPanel from '@/components/design/CalcPanel'
 
 import SimulationPanel from '@/components/design/SimulationPanel'
-
+import PegPlanEditor from '@/components/design/PegPlanEditor'
 import BorderForm from '@/components/design/BorderForm'
 import VariantsPanel from '@/components/design/VariantsPanel'
 import SimulationPreview from '@/components/outputs/SimulationExport'
@@ -138,9 +138,7 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
             {activeTab === 'WarpSystem' && <WarpSystemForm />}
             {activeTab === 'Weft' && <WeftForm />}
             {activeTab === 'Loom' && <LoomForm />}
-
             {activeTab === 'Border' && <BorderForm />}
-
             {activeTab === 'AI' && <SimulationPanel />}
           </div>
         </div>
@@ -159,7 +157,19 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
             </div>
           )}
 
-
+          {/* Peg Plan Visual (large view) - Conditional Visibility */}
+          {(activeTab === 'Identity' || activeTab === 'Weft') && (
+            <div className="card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div className="section-header" style={{ marginBottom: 0 }}>Peg Plan — Sequence Editor</div>
+              </div>
+              <PegPlanEditor
+                shaftCount={16}
+                onChange={handlePegPlanChange}
+                initialText={store.pegPlanText}
+              />
+            </div>
+          )}
 
           {/* Border Preview Section */}
           {activeTab === 'Border' && (

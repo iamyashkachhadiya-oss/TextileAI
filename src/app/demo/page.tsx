@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useDesignStore } from '@/lib/store/designStore'
 import { textToMatrix } from '@/lib/pegplan/parser'
 import IdentityForm from '@/components/design/IdentityForm'
@@ -8,6 +8,7 @@ import WarpSystemForm from '@/components/design/WarpSystemForm'
 import WeftForm from '@/components/design/WeftForm'
 import LoomForm from '@/components/design/LoomForm'
 import CalcPanel from '@/components/design/CalcPanel'
+import PegPlanEditor from '@/components/design/PegPlanEditor'
 import WeaveCanvas from '@/components/design/WeaveCanvas'
 import SimulationPreview from '@/components/outputs/SimulationExport'
 import BorderForm from '@/components/design/BorderForm'
@@ -37,17 +38,32 @@ export default function DemoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const [draftText, setDraftText] = useState('1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16')
+  const draftSequence = useMemo(() => draftText.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0), [draftText])
+  
+  const weaveMatrix = useMemo(() => {
+    if (!store.pegPlanMatrix.length) return []
+    return store.pegPlanMatrix.map(pick => 
+      draftSequence.map((shaft: number) => pick[shaft - 1] || 0)
+    )
+  }, [store.pegPlanMatrix, draftSequence])
+
   const handlePegPlanChange = useCallback((text: string, matrix: number[][]) => {
     store.setPegPlan(text, matrix); store.recalculate()
   }, [store])
+  
   const handleWeaveToggle = useCallback((row: number, col: number) => {
-    const matrix = store.pegPlanMatrix.map((r, ri) =>
-      ri === row ? r.map((c, ci) => ci === col ? (c === 1 ? 0 : 1) : c) : [...r]
+    const shaft = draftSequence[col]
+    if (!shaft) return
+    const shaftIdx = shaft - 1
+    
+    const newPegPlan = store.pegPlanMatrix.map((r, ri) =>
+      ri === row ? r.map((c, ci) => ci === shaftIdx ? (c === 1 ? 0 : 1) : c) : [...r]
     )
-    import('@/lib/pegplan/parser').then(({ matrixToText }) => {
-      store.setPegPlan(matrixToText(matrix), matrix); store.recalculate()
-    })
-  }, [store])
+    const newText = newPegPlan.map((r, ri) => `${ri + 1}-->${r.map((c, ci) => c === 1 ? ci + 1 : 0).filter(v => v !== 0).join(',')}`).join('\n')
+    store.setPegPlan(newText, newPegPlan)
+    store.recalculate()
+  }, [store, draftSequence])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
@@ -121,7 +137,6 @@ export default function DemoPage() {
             {activeTab === 'Weft' && <WeftForm />}
             {activeTab === 'Loom' && <LoomForm />}
             {activeTab === 'Border' && <BorderForm />}
-
             {activeTab === 'AI Analysis' && <SimulationAssistantUI />}
             {activeTab === 'Export' && <MachineExportPanel />}
           </div>
@@ -130,15 +145,65 @@ export default function DemoPage() {
         {/* ═══ CENTER WORKSPACE — ALWAYS SHOWS FULL LAYOUT ═══ */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* ── 2. WEAVE GRID (always visible) ── */}
+          {/* ── 1. PEG PLAN — BIDIRECTIONAL EDITOR (always visible) ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ marginBottom: 4 }}>
+              <h3 style={{
+                fontSize: 14, fontWeight: 800, color: 'var(--text-1)',
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+              }}>PEG PLAN — BIDIRECTIONAL EDITOR</h3>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+                Click cells to toggle · Text syncs automatically
+              </div>
+            </div>
+            <PegPlanEditor shaftCount={16} onChange={handlePegPlanChange} initialText={store.pegPlanText} />
+          </div>
+
+          {/* ── 2. WEAVE GRID & DRAFT PLAN (always visible) ── */}
           {store.pegPlanMatrix.length > 0 && (
             <div className="card" style={{ padding: 24 }}>
-              <div style={{
-                fontSize: 12, fontWeight: 800, color: 'var(--text-1)',
-                textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16,
-              }}>WEAVE GRID (CLICK TO TOGGLE)</div>
-              <WeaveCanvas matrix={store.pegPlanMatrix} shaftCount={16} onToggle={handleWeaveToggle}
-                repeatW={store.pegPlanMatrix[0]?.length || 16} repeatH={store.pegPlanMatrix.length} />
+              <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, overflowX: 'auto', paddingRight: 24, borderRight: '1px solid var(--border)' }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 800, color: 'var(--text-1)',
+                    textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16,
+                  }}>GENERATED WEAVE DESIGN (CLICK TO EDIT PEG)</div>
+                  <WeaveCanvas matrix={weaveMatrix} shaftCount={draftSequence.length} onToggle={handleWeaveToggle}
+                    repeatW={draftSequence.length} repeatH={weaveMatrix.length} />
+                </div>
+                
+                <div style={{ width: 300, flexShrink: 0, paddingLeft: 24 }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 800, color: 'var(--text-1)',
+                    textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16,
+                  }}>DRAFT PLAN EDITOR</div>
+                  <textarea 
+                    value={draftText} 
+                    onChange={e => setDraftText(e.target.value)}
+                    style={{ 
+                      width: '100%', height: 80, background: '#F8F9FA', border: '1px solid var(--border-light)', 
+                      borderRadius: 8, padding: 12, fontSize: 13, fontFamily: 'monospace', resize: 'none', marginBottom: 12,
+                      color: 'var(--text-1)' 
+                    }}
+                    placeholder="Enter draft sequence (e.g. 1, 2, 3, 4)"
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'row', gap: 2, flexWrap: 'wrap' }}>
+                    {draftSequence.map((shaft: number, i: number) => (
+                      <div key={i} title={`Warp End ${i+1} -> Shaft ${shaft}`} style={{ 
+                        width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--text-1)',
+                        background: '#FFF', border: '1px solid #E4E7EB', borderRadius: 4,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                      }}>
+                        {shaft}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontStyle: 'italic', marginTop: 12, lineHeight: 1.4 }}>
+                    Edit the sequence above. The Weave Design mathematically outputs: Weave[warp, weft] = PegPlan[weft][Draft[warp]]
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -152,7 +217,7 @@ export default function DemoPage() {
             </div>
 
             <SimulationPreview
-              matrix={store.pegPlanMatrix}
+              matrix={weaveMatrix.length > 0 ? weaveMatrix : store.pegPlanMatrix}
               warpColor={store.warp?.colour_hex || '#1B1F3B'}
               weftColor={store.weftSystem.yarns[0]?.colour_hex || '#E8A838'}
               designName={store.identity.design_name || 'Design'}
