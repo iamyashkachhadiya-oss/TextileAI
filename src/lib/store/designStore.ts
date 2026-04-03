@@ -29,9 +29,10 @@ interface DesignState {
   // Loom
   loom: LoomSpec | null
 
-  // Peg plan
+  // Peg plan & Draft
   pegPlanText: string
   pegPlanMatrix: number[][]
+  draftSequence: number[]
   weaveMatrix: number[][]
 
   // Calculations
@@ -62,6 +63,7 @@ interface DesignState {
 
   updateLoom: (loom: Partial<LoomSpec>) => void
   setPegPlan: (text: string, matrix: number[][]) => void
+  setDraftSequence: (seq: number[]) => void
   setWeaveMatrix: (matrix: number[][]) => void
   recalculate: () => void
   loadFromSupabase: (designId: string) => Promise<void>
@@ -140,6 +142,7 @@ export const useDesignStore = create<DesignState>((set, get) => ({
     [1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0],
     [0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1],
   ],
+  draftSequence: Array.from({ length: 16 }, (_, i) => i + 1),
   weaveMatrix: [],
   calcOutputs: null,
   isDirty: false,
@@ -289,7 +292,13 @@ export const useDesignStore = create<DesignState>((set, get) => ({
   },
 
   setPegPlan: (text, matrix) => {
-    set({ pegPlanText: text, pegPlanMatrix: matrix, isDirty: true })
+    set({ pegPlanText: text, pegPlanMatrix: matrix })
+    get().recalculate()
+  },
+
+  setDraftSequence: (seq) => {
+    set({ draftSequence: seq })
+    get().recalculate()
   },
 
   setWeaveMatrix: (matrix) => {
@@ -297,9 +306,18 @@ export const useDesignStore = create<DesignState>((set, get) => ({
   },
 
   recalculate: () => {
-    const { loom, warp, weftSystem, warpSystem } = get()
+    const s = get()
+    const { loom, warp, weftSystem, warpSystem, pegPlanMatrix, draftSequence } = s
     if (!loom || !warp || !weftSystem) return
     const calcOutputs = runAllCalculations(loom, warp, weftSystem)
+    
+    // Automatically calculate Weave Matrix from Peg Plan and Draft Sequence
+    let weaveMatrix: number[][] = pegPlanMatrix
+    if (pegPlanMatrix && pegPlanMatrix.length > 0 && draftSequence && draftSequence.length > 0) {
+      weaveMatrix = pegPlanMatrix.map(pick => 
+        draftSequence.map(shaft => pick[shaft - 1] || 0)
+      )
+    }
     
     // Run fabric simulation engine
     const activeWarpYarns = warpSystem.yarns.filter(y => y.is_active)
@@ -330,8 +348,7 @@ export const useDesignStore = create<DesignState>((set, get) => ({
     } catch (e) {
       console.error('Simulation engine error:', e)
     }
-    
-    set({ calcOutputs })
+    set({ calcOutputs, weaveMatrix, isDirty: true })
   },
 
   loadFromSupabase: async (designId: string) => {

@@ -152,7 +152,7 @@ export default function DemoPage() {
             </div>
 
             <SimulationPreview
-              matrix={store.pegPlanMatrix}
+              matrix={store.weaveMatrix.length > 0 ? store.weaveMatrix : store.pegPlanMatrix}
               warpColor={store.warp?.colour_hex || '#1B1F3B'}
               weftColor={store.weftSystem.yarns[0]?.colour_hex || '#E8A838'}
               designName={store.identity.design_name || 'Design'}
