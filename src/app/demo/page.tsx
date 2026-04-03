@@ -138,7 +138,7 @@ export default function DemoPage() {
           </div>
 
           {/* ── 2. DRAFT & WEAVE STRUCTURE ANALYSIS ── */}
-          <div className="card" style={{ padding: 24, background: '#1c1c1c' }}>
+          <div className="card" style={{ padding: 24 }}>
             <DraftAnalysisTool />
           </div>
 
