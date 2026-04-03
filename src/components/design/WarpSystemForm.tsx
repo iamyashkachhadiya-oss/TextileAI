@@ -15,52 +15,11 @@ function WarpDiagram() {
       background: '#F8F9FA', borderRadius: 12, padding: 20, marginBottom: 20,
       border: '1.5px solid var(--border-light)', position: 'relative', overflow: 'hidden',
     }}>
-      <svg width="100%" height="180" viewBox="0 0 360 180" fill="none" preserveAspectRatio="xMidYMid meet">
-        {/* Warp Beam Left */}
-        <ellipse cx="40" cy="130" rx="28" ry="35" fill="#D4CFC4" stroke="#888" strokeWidth="1.5" />
-        <ellipse cx="40" cy="130" rx="12" ry="14" fill="#B8B0A2" stroke="#888" strokeWidth="1" />
-        <circle cx="40" cy="130" r="4" fill="#888" />
-
-        {/* Warp Beam Right */}
-        <ellipse cx="320" cy="130" rx="28" ry="35" fill="#D4CFC4" stroke="#888" strokeWidth="1.5" />
-        <ellipse cx="320" cy="130" rx="12" ry="14" fill="#B8B0A2" stroke="#888" strokeWidth="1" />
-        <circle cx="320" cy="130" r="4" fill="#888" />
-
-        {/* Warp Sheet - threads from left beam */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <line key={`thread-${i}`}
-            x1="68" y1={110 + i * 3}
-            x2="292" y2={110 + i * 3}
-            stroke="#C49A3C" strokeWidth="0.8" opacity={0.6 + (i % 3) * 0.15}
-          />
-        ))}
-
-        {/* Section Guide Frame */}
-        <rect x="100" y="40" width="8" height="80" rx="2" fill="#8B7355" stroke="#6B5840" strokeWidth="1" />
-        <rect x="100" y="35" width="8" height="10" rx="1" fill="#A0896E" />
-
-        {/* Heddle Frame Posts */}
-        <rect x="160" y="30" width="4" height="105" rx="1" fill="#7B6B55" />
-        <rect x="200" y="30" width="4" height="105" rx="1" fill="#7B6B55" />
-        {/* Heddle top bar */}
-        <rect x="155" y="28" width="54" height="6" rx="2" fill="#8B7B65" stroke="#6B5B45" strokeWidth="0.5" />
-        {/* Heddle eyes */}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <circle key={`eye-${i}`} cx={162 + i * 5.5} cy={60 + (i % 2) * 8} r="1.5" fill="none" stroke="#999" strokeWidth="0.5" />
-        ))}
-
-        {/* Lease Rods */}
-        <line x1="245" y1="100" x2="245" y2="150" stroke="#666" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="260" y1="95" x2="260" y2="150" stroke="#666" strokeWidth="2.5" strokeLinecap="round" />
-
-        {/* Labels */}
-        <text x="40" y="175" textAnchor="middle" fontSize="9" fontWeight="700" fill="#666">Warp Beam</text>
-        <text x="104" y="25" textAnchor="middle" fontSize="8" fontWeight="600" fill="#888">Section Guide</text>
-        <text x="182" y="20" textAnchor="middle" fontSize="8" fontWeight="600" fill="#888">Heddle Frame</text>
-        <text x="252" y="170" textAnchor="middle" fontSize="8" fontWeight="600" fill="#888">Lease Rods</text>
-        <text x="320" y="175" textAnchor="middle" fontSize="9" fontWeight="700" fill="#666">Warp Beam</text>
-        <text x="180" y="150" textAnchor="middle" fontSize="8" fontWeight="600" fill="#AAA">Warp Sheet</text>
-      </svg>
+      <img 
+        src="/warp_machine.png" 
+        alt="Warp Configuration Machine" 
+        style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block', borderRadius: 8 }} 
+      />
     </div>
   )
 }
