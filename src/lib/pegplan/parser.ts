@@ -8,10 +8,15 @@
  *   ---
  *   3-->1,3,5,6,7,10,11,13
  *
+ * ALSO supports simplified format (no separators needed):
+ *   1-->1,3,5,6
+ *   2-->2,4,6,8
+ *   3-->1,3,5,7
+ *
  * Parsing rule:
- *   - Split on "---" divider lines → array of pick blocks
- *   - For each block: extract pick number from "N-->" prefix
- *   - Collect comma-separated integers as raised shafts
+ *   - If "---" separators are present, split on them → array of pick blocks
+ *   - If NO "---" separators, each "N-->..." line becomes its own row
+ *   - For each block/line: extract shaft numbers after the arrow
  *   - Set grid[pick][shaft] = 1 for raised, 0 for lowered
  */
 
@@ -24,36 +29,36 @@
 export function textToMatrix(text: string, shaftCount: number): number[][] {
   if (!text.trim()) return []
 
-  // Split by "---" separator lines
+  const trimmed = text.trim()
+
+  // Check if text contains "---" separators
+  const hasSeparators = /^-{3,}$/m.test(trimmed)
+
+  if (hasSeparators) {
+    // Original format: split by "---" separator lines
+    return parseSeparatedFormat(trimmed, shaftCount)
+  } else {
+    // Simplified format: each line with "-->" is a separate pick
+    return parseLineByLineFormat(trimmed, shaftCount)
+  }
+}
+
+/**
+ * Parse the "---" separated format (original Surat factory format)
+ */
+function parseSeparatedFormat(text: string, shaftCount: number): number[][] {
   const blocks = text.split(/\n*-{3,}\n*/).filter(b => b.trim())
   const matrix: number[][] = []
 
   for (const block of blocks) {
-    // Find lines with "-->" pattern
     const lines = block.split('\n').filter(l => l.trim())
-    let allShafts: number[] = []
+    const allShafts: number[] = []
 
     for (const line of lines) {
-      const arrowMatch = line.match(/\d+\s*-->\s*(.+)/)
-      if (arrowMatch) {
-        // Line starts with "N-->" — extract shafts after arrow
-        const shaftStr = arrowMatch[1]
-        const shafts = shaftStr
-          .split(',')
-          .map(s => parseInt(s.trim(), 10))
-          .filter(n => !isNaN(n) && n >= 1 && n <= shaftCount)
-        allShafts.push(...shafts)
-      } else {
-        // Continuation line — just comma-separated numbers
-        const shafts = line
-          .split(',')
-          .map(s => parseInt(s.trim(), 10))
-          .filter(n => !isNaN(n) && n >= 1 && n <= shaftCount)
-        allShafts.push(...shafts)
-      }
+      const shafts = extractShafts(line, shaftCount)
+      allShafts.push(...shafts)
     }
 
-    // Build row: shafts are 1-indexed, matrix is 0-indexed
     const row = new Array(shaftCount).fill(0)
     for (const shaft of allShafts) {
       row[shaft - 1] = 1
@@ -62,6 +67,53 @@ export function textToMatrix(text: string, shaftCount: number): number[][] {
   }
 
   return matrix
+}
+
+/**
+ * Parse the simplified line-by-line format (each "-->" line = one pick)
+ */
+function parseLineByLineFormat(text: string, shaftCount: number): number[][] {
+  const lines = text.split('\n').filter(l => l.trim())
+  const matrix: number[][] = []
+
+  for (const line of lines) {
+    const trimLine = line.trim()
+    if (!trimLine) continue
+
+    // Skip pure comment lines or empty lines
+    if (trimLine.startsWith('//') || trimLine.startsWith('#')) continue
+
+    const shafts = extractShafts(trimLine, shaftCount)
+
+    // Only add a row if we found valid shaft numbers
+    if (shafts.length > 0) {
+      const row = new Array(shaftCount).fill(0)
+      for (const shaft of shafts) {
+        row[shaft - 1] = 1
+      }
+      matrix.push(row)
+    }
+  }
+
+  return matrix
+}
+
+/**
+ * Extract shaft numbers from a single line of text
+ * Supports: "1-->1,3,5,6" and plain "1,3,5,6"
+ */
+function extractShafts(line: string, shaftCount: number): number[] {
+  const trimLine = line.trim()
+  if (!trimLine) return []
+
+  // Check for "N-->" arrow format
+  const arrowMatch = trimLine.match(/\d+\s*-->\s*(.+)/)
+  const shaftStr = arrowMatch ? arrowMatch[1] : trimLine
+
+  return shaftStr
+    .split(/[,\s]+/)
+    .map(s => parseInt(s.trim(), 10))
+    .filter(n => !isNaN(n) && n >= 1 && n <= shaftCount)
 }
 
 /**
@@ -85,11 +137,6 @@ export function matrixToText(matrix: number[][]): string {
     }
 
     lines.push(`${i + 1}-->${raisedShafts.join(',')}`)
-
-    // Add separator between picks (but not after last one)
-    if (i < matrix.length - 1) {
-      lines.push('---')
-    }
   }
 
   return lines.join('\n')

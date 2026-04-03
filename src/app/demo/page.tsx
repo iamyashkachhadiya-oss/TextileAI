@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useDesignStore } from '@/lib/store/designStore'
+import { textToMatrix } from '@/lib/pegplan/parser'
 import IdentityForm from '@/components/design/IdentityForm'
 import WarpSystemForm from '@/components/design/WarpSystemForm'
 import WeftForm from '@/components/design/WeftForm'
@@ -24,10 +25,17 @@ export default function DemoPage() {
 
   useEffect(() => {
     if (initialized) return
-    const { updateIdentity, recalculate } = useDesignStore.getState()
+    const { updateIdentity, setPegPlan, recalculate } = useDesignStore.getState()
     updateIdentity({ design_name: 'Pattu Dobby Saree', design_number: 'SD-2025-001' })
+    
+    // Set a default peg plan so simulation + grid are visible immediately
+    const defaultPegText = `1-->1,3,5,7,9,11,13,15\n2-->2,4,6,8,10,12,14,16\n3-->1,3,5,7,9,11,13,15\n4-->2,4,6,8,10,12,14,16\n5-->1,2,5,6,9,10,13,14\n6-->3,4,7,8,11,12,15,16\n7-->1,2,5,6,9,10,13,14\n8-->3,4,7,8,11,12,15,16`
+    const defaultMatrix = textToMatrix(defaultPegText, 16)
+    setPegPlan(defaultPegText, defaultMatrix)
+    
     recalculate()
     setInitialized(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handlePegPlanChange = useCallback((text: string, matrix: number[][]) => {
@@ -43,39 +51,82 @@ export default function DemoPage() {
     })
   }, [store])
 
-  const tabs: DemoTab[] = ['Identity', 'Warp', 'Weft', 'Loom', 'Peg Plan', 'Border', 'Costing', 'AI Analysis', 'Export']
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
-      {/* Header */}
+      {/* ═══ HEADER ═══ */}
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 24px', height: 56, borderBottom: '1px solid var(--border)',
         background: 'var(--surface)', flexShrink: 0, zIndex: 100,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(145deg, #1B1F3B, #2A2F52)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>ƒ</span>
+          <div style={{
+            width: 36, height: 36, borderRadius: 9,
+            background: 'linear-gradient(145deg, #1B1F3B, #2A2F52)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ color: '#E8A838', fontSize: 18, fontWeight: 700 }}>ƒ</span>
           </div>
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)', letterSpacing: '-0.02em' }}>FabricAI Studio</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)', letterSpacing: '-0.02em' }}>FabricAI</span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)' }}>STUDIO</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -2 }}>
+              {store.identity.design_name || 'Untitled'} · {store.identity.design_number || 'No ID'}
+            </div>
+          </div>
         </div>
-        <button onClick={() => import('@/components/outputs/PDFExport').then(m => m.downloadPDF())} className="btn-accent" style={{ fontSize: 12, height: 38, padding: '0 18px', borderRadius: 8 }}>Export PDF</button>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{
+            padding: '5px 14px', fontSize: 11, fontWeight: 700,
+            border: '1.5px solid var(--accent)', color: 'var(--accent)',
+            borderRadius: 6, cursor: 'pointer',
+          }}>DEMO MODE</span>
+          <button onClick={() => import('@/components/outputs/PDFExport').then(m => m.downloadPDF())}
+            className="btn-accent" style={{ fontSize: 12, height: 38, padding: '0 18px', borderRadius: 8 }}>
+            ↓ Export PDF
+          </button>
+        </div>
       </header>
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar */}
-        <div style={{ width: 360, flexShrink: 0, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--surface)' }}>
-          <div className="tab-bar" style={{ padding: '0 8px', flexShrink: 0 }}>
-            {tabs.map((tab) => (
-              <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)} style={{ padding: '12px 12px', fontSize: 12 }}>{tab}</button>
-            ))}
+        {/* ═══ LEFT SIDEBAR ═══ */}
+        <div style={{
+          width: 280, flexShrink: 0, borderRight: '1px solid var(--border)',
+          display: 'flex', flexDirection: 'column', background: 'var(--surface)',
+        }}>
+          {/* Sidebar Tab Bar */}
+          <div style={{
+            display: 'flex', gap: 0, padding: '0 4px',
+            borderBottom: '2px solid var(--border-light)',
+            overflowX: 'auto', flexShrink: 0,
+          }}>
+            {['Identity', 'Warp', 'Weft', 'Loom', 'Peg\nPlan', 'Border', 'Cos…'].map((label, i) => {
+              const tabMap: DemoTab[] = ['Identity', 'Warp', 'Weft', 'Loom', 'Peg Plan', 'Border', 'Costing']
+              const tab = tabMap[i]
+              return (
+                <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                  style={{ padding: '10px 8px', fontSize: 11, whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                  {label}
+                </button>
+              )
+            })}
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+
+          {/* Sidebar Content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
             {activeTab === 'Identity' && <IdentityForm />}
             {activeTab === 'Warp' && <WarpSystemForm />}
             {activeTab === 'Weft' && <WeftForm />}
             {activeTab === 'Loom' && <LoomForm />}
-            {activeTab === 'Peg Plan' && <div className="card"><div className="section-header">Peg Plan Editor</div><PegPlanEditor shaftCount={16} onChange={handlePegPlanChange} initialText={store.pegPlanText} /></div>}
+            {activeTab === 'Peg Plan' && (
+              <div style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', padding: '12px 0' }}>
+                Use the bidirectional editor in the center panel to edit the peg plan.
+              </div>
+            )}
             {activeTab === 'Border' && <BorderForm />}
             {activeTab === 'Costing' && <CostingPanel />}
             {activeTab === 'AI Analysis' && <SimulationAssistantUI />}
@@ -83,55 +134,95 @@ export default function DemoPage() {
           </div>
         </div>
 
-        {/* Center Workspace */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* Main Simulation Card */}
-          <div className="card" style={{ padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ alignSelf: 'flex-start', marginBottom: 20 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-1)' }}>FABRIC SIMULATION</h3>
-                <div style={{ height: 1.5, width: 40, background: 'var(--primary)', marginTop: 8 }} />
+        {/* ═══ CENTER WORKSPACE — ALWAYS SHOWS FULL LAYOUT ═══ */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* ── 1. PEG PLAN — BIDIRECTIONAL EDITOR (always visible) ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ marginBottom: 4 }}>
+              <h3 style={{
+                fontSize: 14, fontWeight: 800, color: 'var(--text-1)',
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+              }}>PEG PLAN — BIDIRECTIONAL EDITOR</h3>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+                Click cells to toggle · Text syncs automatically
+              </div>
             </div>
-            
-            <SimulationPreview 
-                matrix={store.pegPlanMatrix} 
-                warpColor={store.warp?.colour_hex || '#1B1F3B'} 
-                weftColor={store.weftSystem.yarns[0]?.colour_hex || '#E8A838'} 
-                designName="Design" 
+            <PegPlanEditor shaftCount={16} onChange={handlePegPlanChange} initialText={store.pegPlanText} />
+          </div>
+
+          {/* ── 2. WEAVE GRID (always visible) ── */}
+          {store.pegPlanMatrix.length > 0 && (
+            <div className="card" style={{ padding: 24 }}>
+              <div style={{
+                fontSize: 12, fontWeight: 800, color: 'var(--text-1)',
+                textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16,
+              }}>WEAVE GRID (CLICK TO TOGGLE)</div>
+              <WeaveCanvas matrix={store.pegPlanMatrix} shaftCount={16} onToggle={handleWeaveToggle}
+                repeatW={store.pegPlanMatrix[0]?.length || 16} repeatH={store.pegPlanMatrix.length} />
+            </div>
+          )}
+
+          {/* ── 3. FABRIC SIMULATION (always visible) ── */}
+          <div className="card" style={{ padding: 28 }}>
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={{
+                fontSize: 14, fontWeight: 800, color: 'var(--text-1)',
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+              }}>FABRIC SIMULATION</h3>
+            </div>
+
+            <SimulationPreview
+              matrix={store.pegPlanMatrix}
+              warpColor={store.warp?.colour_hex || '#1B1F3B'}
+              weftColor={store.weftSystem.yarns[0]?.colour_hex || '#E8A838'}
+              designName={store.identity.design_name || 'Design'}
             />
-
-            {/* Premium Action Row (Match Screenshot) */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-                <button 
-                  style={{ height: 44, padding: '0 24px', background: '#2D3436', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  Download Fabric Image
-                </button>
-                <button 
-                  style={{ height: 44, padding: '0 24px', background: 'white', color: '#128C7E', border: '1.5px solid #128C7E', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  Copy for WhatsApp
-                </button>
-            </div>
           </div>
 
-          <div className="card">
-            <div className="section-header">STRUCTURE GRID</div>
-            <WeaveCanvas matrix={store.pegPlanMatrix} shaftCount={16} onToggle={handleWeaveToggle} repeatW={16} repeatH={8} />
-          </div>
-
-          {/* Global Engineering Status Footer (Match Screenshot) */}
-          <div style={{ 
-              marginTop: 'auto', background: '#F8F9FA', border: '1.5px solid #EEE', borderRadius: 12, padding: '16px 24px',
-              display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, flexShrink: 0
+          {/* ── 4. STATUS FOOTER (always visible) ── */}
+          <div style={{
+            marginTop: 'auto', background: '#F8F9FA', border: '1.5px solid #EEE', borderRadius: 12,
+            padding: '14px 24px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, flexShrink: 0,
           }}>
-              <div><div style={{ fontSize: 9, fontWeight: 800, color: '#AAA' }}>WARP</div><div style={{ fontSize: 12, fontWeight: 700 }}>{store.warp?.count_value}{store.warp?.count_system === 'denier' ? 'D' : 'Ne'} {store.warp?.material}</div></div>
-              <div><div style={{ fontSize: 9, fontWeight: 800, color: '#AAA' }}>MAIN WEFT</div><div style={{ fontSize: 12, fontWeight: 700 }}>{store.weftSystem.yarns[0]?.count_value || '--'}Ne {store.weftSystem.yarns[0]?.material || '--'}</div></div>
-              <div><div style={{ fontSize: 9, fontWeight: 800, color: '#AAA' }}>EXTRA YARNS</div><div style={{ fontSize: 12, fontWeight: 700 }}>{store.weftSystem.yarns.length - 1} Yarns</div></div>
-              <div><div style={{ fontSize: 9, fontWeight: 800, color: '#AAA' }}>MACHINE</div><div style={{ fontSize: 12, fontWeight: 700 }}>Rapier - 500 RPM</div></div>
-              <div><div style={{ fontSize: 9, fontWeight: 800, color: '#AAA' }}>SYSTEM MODE</div><div style={{ fontSize: 12, fontWeight: 700 }}>Advanced</div></div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#AAA', textTransform: 'uppercase' }}>WARP</div>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>
+                {store.warp?.count_value || 75}{store.warp?.count_system === 'denier' ? 'D' : 'Ne'}{' '}
+                {store.warp?.material === 'polyester' ? 'Polyester' :
+                 store.warp?.material === 'cotton' ? 'Cotton' :
+                 store.warp?.material || 'Polyester'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#AAA', textTransform: 'uppercase' }}>MAIN WEFT</div>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>
+                {store.weftSystem.yarns[0]?.count_value || '--'}{store.weftSystem.yarns[0]?.count_system === 'ne' ? 'Ne' : 'D'}{' '}
+                {store.weftSystem.yarns[0]?.material === 'cotton' ? 'Cotton' :
+                 store.weftSystem.yarns[0]?.material === 'polyester' ? 'Polyester' :
+                 store.weftSystem.yarns[0]?.material || '--'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#AAA', textTransform: 'uppercase' }}>EXTRA YARNS</div>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>{Math.max(store.weftSystem.yarns.length - 1, 0)} Yarns</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#AAA', textTransform: 'uppercase' }}>MACHINE</div>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>
+                {store.loom?.machine_type === 'rapier' ? 'Rapier' :
+                 store.loom?.machine_type === 'air_jet' ? 'Air Jet' :
+                 store.loom?.machine_type === 'water_jet' ? 'Water Jet' : 'Rapier'} - {store.loom?.machine_rpm || 500} RPM
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#AAA', textTransform: 'uppercase' }}>SYSTEM MODE</div>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>Advanced</div>
+            </div>
           </div>
         </div>
 
-        {/* Right Sidebar */}
+        {/* ═══ RIGHT SIDEBAR — LIVE CALCULATIONS ═══ */}
         <div style={{ borderLeft: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
           <CalcPanel />
         </div>

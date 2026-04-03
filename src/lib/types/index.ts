@@ -340,7 +340,7 @@ export const DEFAULT_NOZZLE_CONFIG: NozzleConfig = {
 
 export function createDefaultWeftYarn(index: number): WeftYarn {
   const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-  const colours = ['#1B1F3B', '#E8A838', '#D44B4B', '#4BA86D', '#7B61FF', '#FF6B9D', '#00B4D8', '#FF8C42']
+  const colours = ['#E8A838', '#1B1F3B', '#D44B4B', '#4BA86D', '#7B61FF', '#FF6B9D', '#00B4D8', '#FF8C42']
   return {
     id: `weft_${Date.now()}_${index}`,
     label: `Yarn ${labels[index] || String(index + 1)}`,
