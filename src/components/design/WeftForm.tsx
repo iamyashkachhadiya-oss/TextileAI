@@ -11,48 +11,12 @@ const QUICK_COLORS = ['#1B1F3B', '#FFFFFF', '#E8A838', '#D44B4B', '#4BA86D', '#7
 
 function WeftDiagram() {
   return (
-    <div style={{
-      background: '#F8F9FA', borderRadius: 12, padding: 16, marginBottom: 16,
-      border: '1.5px solid var(--border-light)', overflow: 'hidden',
-    }}>
-      <svg width="100%" height="140" viewBox="0 0 340 140" fill="none" preserveAspectRatio="xMidYMid meet">
-        {/* Loom frame */}
-        <rect x="40" y="10" width="260" height="100" rx="4" fill="none" stroke="#C0B8A8" strokeWidth="1.5" />
-        
-        {/* Weft threads - horizontal */}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <line key={`weft-${i}`}
-            x1="40" y1={25 + i * 11}
-            x2="300" y2={25 + i * 11}
-            stroke="#E8A838" strokeWidth="1.2" opacity={0.5 + (i % 3) * 0.2}
-          />
-        ))}
-        
-        {/* Warp threads - vertical */}
-        {Array.from({ length: 18 }).map((_, i) => (
-          <line key={`warp-${i}`}
-            x1={55 + i * 14} y1="10"
-            x2={55 + i * 14} y2="110"
-            stroke="#1B1F3B" strokeWidth="0.6" opacity={0.3}
-          />
-        ))}
-        
-        {/* Shuttle / nozzle indicator */}
-        <rect x="20" y="50" width="25" height="20" rx="4" fill="#2D3436" />
-        <circle cx="32" cy="60" r="3" fill="#E8A838" />
-        <path d="M45 60 L55 60" stroke="#E8A838" strokeWidth="2" strokeDasharray="3 2" />
-        
-        {/* Nozzle indicators on right */}
-        {[0, 1, 2].map((i) => (
-          <g key={`noz-${i}`}>
-            <rect x="305" y={35 + i * 22} width="20" height="16" rx="3" fill={NOZZLE_COLOUR_MAP[i]} opacity="0.8" />
-            <text x="315" y={46 + i * 22} textAnchor="middle" fontSize="8" fontWeight="800" fill="white">{i + 1}</text>
-          </g>
-        ))}
-        
-        {/* Labels */}
-        <text x="170" y="128" textAnchor="middle" fontSize="9" fontWeight="600" fill="#888">Weft Insertion System</text>
-      </svg>
+    <div style={{ marginBottom: 20 }}>
+      <img 
+        src="/weft_machine.jpg" 
+        alt="Weft Configuration Machine" 
+        style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 8 }} 
+      />
     </div>
   )
 }
