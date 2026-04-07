@@ -208,14 +208,7 @@ export default function WarpSystemForm() {
         </p>
       </div>
 
-      {/* Diagram */}
-      <div style={{ marginBottom: 18 }}>
-        <img
-          src="/warp_machine.png"
-          alt="Warp Configuration"
-          style={{ width: '100%', height: 'auto', borderRadius: 12, display: 'block', border: '1px solid var(--border-light)' }}
-        />
-      </div>
+
 
       {/* Add warp button */}
       <button

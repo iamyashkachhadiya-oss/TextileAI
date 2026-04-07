@@ -2,336 +2,525 @@
 
 import { useDesignStore } from '@/lib/store/designStore'
 
-// PDF generation using canvas-based approach (avoids @react-pdf SSR issues)
 export async function downloadPDF() {
   const state = useDesignStore.getState()
   const { identity, warp, weftSystem, loom, calcOutputs } = state
+  const draftSeq: number[] = state.draftSequence   // threading draft: end→shaft
 
-  // Create a printable HTML document
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) {
-    alert('Please allow popups to download PDF')
-    return
+  // ── Resolve thread colors first (before any SVG generation) ──────────
+  const COLOR_MAP: Record<string, string> = {
+    ivory:'#FFFFF0',cream:'#FFFDD0',white:'#F5F5F7',black:'#1D1D1F',navy:'#1B3A6B',
+    red:'#C41E3A',maroon:'#800020',gold:'#E8A838',amber:'#E8A838',yellow:'#F4D03F',
+    orange:'#E67E22',green:'#27AE60',blue:'#2980B9',pink:'#E8909C',grey:'#888888',
+    gray:'#888888',silver:'#C0C0C0',brown:'#6D4C41',beige:'#F5F5DC',teal:'#008080',purple:'#7B1FA2',
+  }
+  const resolveHex = (c: string, fb: string) => !c ? fb :
+    c.startsWith('#') ? c : (COLOR_MAP[c.toLowerCase().trim()] ?? fb)
+  // Safe visible defaults — dark navy warp, amber weft (not near-black)
+  const warpHex = resolveHex(warp?.colour_hex || warp?.colour_code || '', '#1B3A6B')
+  const weftHex = resolveHex(weftSystem.yarns[0]?.colour_hex || weftSystem.yarns[0]?.colour_code || '', '#E8A838')
+
+  // ── Build peg plan matrix SVG ──────────────────────────────────────────
+  const pegMatrix = state.pegPlanMatrix
+  const cellPx = 9
+  const pegSVGRows = pegMatrix.length > 0
+    ? pegMatrix.map((row, ri) => {
+        return row.map((cell, ci) =>
+          `<rect x="${ci * cellPx}" y="${ri * cellPx}" width="${cellPx - 1}" height="${cellPx - 1}" rx="1"
+            fill="${cell ? warpHex : 'none'}" stroke="#D1D1D6" stroke-width="0.5"/>`
+        ).join('')
+      }).join('')
+    : ''
+  const pegCols = pegMatrix[0]?.length || 0
+  const pegSVGW = pegCols * cellPx
+  const pegSVGH = pegMatrix.length * cellPx
+
+  // ── Build threading draft matrix SVG ────────────────────────────
+  // Rows = shafts (top = shaft 1), Cols = warp ends
+  // A cell is filled if draftSeq[end] === shaft
+  const numShafts = state.shaftCount || 8
+  const numEnds   = draftSeq.length || numShafts
+  // Build rows: one row per shaft, columns = ends
+  const draftSVGRows = Array.from({ length: numShafts }, (_, shaftIdx) => {
+    const shaft = shaftIdx + 1
+    return Array.from({ length: numEnds }, (_, endIdx) => {
+      const filled = draftSeq[endIdx] === shaft
+      return `<rect x="${endIdx * cellPx}" y="${shaftIdx * cellPx}" width="${cellPx - 1}" height="${cellPx - 1}" rx="1"
+        fill="${filled ? '#007AFF' : 'none'}" stroke="#C8C8CC" stroke-width="0.5"/>`
+    }).join('')
+  }).join('')
+  const draftSVGW = numEnds   * cellPx
+  const draftSVGH = numShafts * cellPx
+  // Draft numeric text: group ends by shaft  e.g. "Shaft 1: ends 1,3,5..."
+  const draftTextLines = Array.from({ length: numShafts }, (_, si) => {
+    const shaft = si + 1
+    const ends = draftSeq
+      .map((s, i) => ({ s, e: i + 1 }))
+      .filter(x => x.s === shaft)
+      .map(x => x.e)
+    return ends.length
+      ? `<tr><td style="font-family:monospace;font-size:9px;padding:2px 6px;border-bottom:1px solid #BFDBFF;color:#007AFF;"><strong>S${shaft}</strong> → ${ends.join(', ')}</td></tr>`
+      : `<tr><td style="font-family:monospace;font-size:9px;padding:2px 6px;color:#C7C7CC;">S${shaft} → —</td></tr>`
+  }).join('')
+
+  // ── Peg plan text rows ───────────────────────────────────────────
+  const pegTextLines = state.pegPlanText
+    ? state.pegPlanText.split('\n').filter(Boolean).map(l =>
+        `<tr><td style="font-family:monospace;font-size:9px;padding:2px 6px;color:#1D1D1F;border-bottom:1px solid #E5E5EA;">${l}</td></tr>`
+      ).join('')
+    : '<tr><td style="color:#8E8E93;font-size:10px;padding:4px;">No peg plan defined</td></tr>'
+
+  // ── Fabric Simulation SVG (tiled weave visual, 200px to match website) ────
+  const wMatrix = state.weaveMatrix.length > 0 ? state.weaveMatrix : state.pegPlanMatrix
+  const fabricCols = wMatrix[0]?.length || 0
+  const fabricRows = wMatrix.length
+  const fp = 4
+  const maxFabricPx = 200
+  const tilesX = fabricCols > 0 ? Math.ceil(maxFabricPx / (fabricCols * fp)) + 1 : 0
+  const tilesY = fabricRows > 0 ? Math.ceil(maxFabricPx / (fabricRows * fp)) + 1 : 0
+  const fabricW = Math.min(tilesX * fabricCols * fp, maxFabricPx)
+  const fabricH = Math.min(tilesY * fabricRows * fp, maxFabricPx)
+  let fabricRects = ''
+  if (fabricCols > 0 && fabricRows > 0) {
+    for (let ty = 0; ty < tilesY; ty++) {
+      for (let tx = 0; tx < tilesX; tx++) {
+        for (let r = 0; r < fabricRows; r++) {
+          for (let c = 0; c < fabricCols; c++) {
+            const x = (tx * fabricCols + c) * fp
+            const y = (ty * fabricRows + r) * fp
+            if (x >= fabricW || y >= fabricH) continue
+            fabricRects += `<rect x="${x}" y="${y}" width="${fp}" height="${fp}" fill="${wMatrix[r]?.[c] === 1 ? warpHex : weftHex}"/>`
+          }
+        }
+      }
+    }
   }
 
-  const weftYarnRows = weftSystem.yarns.map((y, idx) => `
-    <tr><td colspan="2" style="font-weight:700;color:#1B1F3B;padding-top:${idx === 0 ? '0' : '16px'}; border-bottom: 2px solid #E8A838;">
-      ${y.label} [Nozzles: ${y.nozzle_config.sequence.join(', ')}]
-    </td></tr>
-    <tr><td>Count</td><td>${y.count_value} ${y.count_system === 'denier' ? 'D' : 'Ne'}</td></tr>
-    <tr><td>Material</td><td>${y.material}</td></tr>
-    <tr><td>Luster</td><td>${y.luster}</td></tr>
-    <tr><td>Shrinkage</td><td>${y.properties.shrinkage_min_pct}% – ${y.properties.shrinkage_max_pct}%</td></tr>
-    <tr><td>Nozzle Pressure</td><td>${y.nozzle_config.pressure_bar} Bar</td></tr>
-    ${y.notes ? `<tr><td>Notes</td><td>${y.notes}</td></tr>` : ''}
-  `).join('')
+  // ── Weft yarn rows (compact) ─────────────────────────────────────
+  const weftRows = weftSystem.yarns.map((y, i) =>
+    `<tr style="${i % 2 === 0 ? 'background:#F9F9FB;' : ''}">
+      <td>${y.label}</td>
+      <td>${y.count_value}${y.count_system === 'denier' ? 'D' : 'Ne'}</td>
+      <td>${y.material}</td>
+      <td>${y.nozzle_config.sequence.join(',')}</td>
+      <td>${y.nozzle_config.pressure_bar} bar</td>
+      <td>${y.properties.shrinkage_min_pct}–${y.properties.shrinkage_max_pct}%</td>
+    </tr>`
+  ).join('')
 
-  const html = `
-<!DOCTYPE html>
+  // ── Simulation data (matches website SimulationPanel exactly) ────
+  const sim = calcOutputs?.simulation
+
+  // Same 4 score cards as SimulationPanel.tsx
+  const simScoreCards = sim ? [
+    { label: 'Shrinkage', value: sim.shrinkage_pct.toFixed(1), unit: '%', max: 35, color: '#a32d2d', pct: Math.min(sim.shrinkage_pct / 35, 1), formula: sim.formulas?.shrinkage || '' },
+    { label: 'Drape', value: String(sim.drape_index), unit: '/ 100', max: 100, color: '#185fa5', pct: sim.drape_index / 100, formula: sim.formulas?.drape || '' },
+    { label: 'Stiffness', value: String(sim.stiffness_index), unit: '/ 100', max: 100, color: '#854f0b', pct: sim.stiffness_index / 100, formula: sim.formulas?.stiffness || '' },
+    { label: 'Fabric Strength', value: sim.strength_n_per_cm.toFixed(1), unit: 'N/cm', max: 400, color: '#3b6d11', pct: Math.min(sim.strength_n_per_cm / 400, 1), formula: sim.formulas?.strength || '' },
+  ] : []
+
+  const simScoreHTML = simScoreCards.map(s => `
+    <div style="background:#F9F9FB;border:1px solid #E5E5EA;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:9px;color:#8E8E93;font-weight:500;margin-bottom:4px;">${s.label}</div>
+      <div style="display:flex;align-items:baseline;gap:4px;">
+        <span style="font-size:22px;font-weight:700;color:${s.color};letter-spacing:-0.02em;">${s.value}</span>
+        <span style="font-size:9px;color:#8E8E93;">${s.unit}</span>
+      </div>
+      <div style="height:5px;background:#E5E5EA;border-radius:3px;overflow:hidden;margin-top:7px;">
+        <div style="height:100%;width:${Math.round(s.pct * 100)}%;background:${s.color};border-radius:3px;"></div>
+      </div>
+      ${s.formula ? `<div style="font-size:7.5px;font-family:monospace;color:#8E8E93;margin-top:5px;line-height:1.4;word-break:break-all;">${s.formula}</div>` : ''}
+    </div>`
+  ).join('')
+
+  // Radar SVG matching website's RadarDisplay (5 axes: stability, drape, softness, strength, handle)
+  const radarScores: Record<string, number> = sim ? {
+    stability: sim.dimensional_stability,
+    drape: sim.drape_index,
+    softness: sim.softness,
+    strength: Math.round(Math.min(sim.strength_n_per_cm / 4, 100)),
+    handle: sim.handle_score,
+  } : {}
+  const radarEntries = Object.entries(radarScores)
+  const radarN = radarEntries.length
+  const radarSize = 160
+  const radarCx = radarSize / 2
+  const radarCy = radarSize / 2
+  const radarMaxR = radarSize / 2 - 28
+  const getRadarPoints = (r: number) => radarEntries.map((_, i) => {
+    const angle = (2 * Math.PI * i) / radarN - Math.PI / 2
+    return `${radarCx + r * Math.cos(angle)},${radarCy + r * Math.sin(angle)}`
+  }).join(' ')
+  const radarDataPoints = radarEntries.map(([, val], i) => {
+    const r = (val / 100) * radarMaxR
+    const angle = (2 * Math.PI * i) / radarN - Math.PI / 2
+    return `${radarCx + r * Math.cos(angle)},${radarCy + r * Math.sin(angle)}`
+  }).join(' ')
+  const radarAxisLines = radarEntries.map(([, ], i) => {
+    const angle = (2 * Math.PI * i) / radarN - Math.PI / 2
+    return `<line x1="${radarCx}" y1="${radarCy}" x2="${radarCx + radarMaxR * Math.cos(angle)}" y2="${radarCy + radarMaxR * Math.sin(angle)}" stroke="#C8C8CC" stroke-width="0.5" opacity="0.5"/>`
+  }).join('')
+  const radarLabels = radarEntries.map(([key, val], i) => {
+    const angle = (2 * Math.PI * i) / radarN - Math.PI / 2
+    const lx = radarCx + (radarMaxR + 20) * Math.cos(angle)
+    const ly = radarCy + (radarMaxR + 20) * Math.sin(angle)
+    return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" style="font-size:8px;fill:#8E8E93;font-weight:500;">${key.replace(/_/g,' ')} ${val}</text>`
+  }).join('')
+  const radarRings = [0.25, 0.5, 0.75, 1.0].map(pct =>
+    `<polygon points="${getRadarPoints(radarMaxR * pct)}" fill="none" stroke="#D1D1D6" stroke-width="0.5" opacity="0.6"/>`
+  ).join('')
+  const radarSVG = radarN > 0 ? `
+    <svg width="${radarSize}" height="${radarSize}" viewBox="0 0 ${radarSize} ${radarSize}" xmlns="http://www.w3.org/2000/svg">
+      ${radarRings}${radarAxisLines}
+      <polygon points="${radarDataPoints}" fill="rgba(55,138,221,0.12)" stroke="#378ADD" stroke-width="2"/>
+      ${radarEntries.map(([, val], i) => {
+        const r = (val / 100) * radarMaxR
+        const angle = (2 * Math.PI * i) / radarN - Math.PI / 2
+        return `<circle cx="${radarCx + r * Math.cos(angle)}" cy="${radarCy + r * Math.sin(angle)}" r="3" fill="#378ADD"/>`
+      }).join('')}
+      ${radarLabels}
+    </svg>` : ''
+
+  // Alerts matching website AlertCard style
+  const alertBorderColors: Record<string, [string, string, string]> = {
+    ok:     ['#eaf3de', '#3b6d11', '#3b6d11'],
+    info:   ['#e6f1fb', '#185fa5', '#185fa5'],
+    warn:   ['#faeeda', '#ba7517', '#854f0b'],
+    danger: ['#fcebeb', '#a32d2d', '#a32d2d'],
+  }
+  const alertsHTML = sim?.alerts?.map((a: { severity: string; message: string; fix: string }) => {
+    const [bg, bdr, txt] = alertBorderColors[a.severity] ?? ['#F2F2F7', '#8E8E93', '#8E8E93']
+    return `<div style="font-size:10px;padding:8px 12px;border-radius:8px;background:${bg};border-left:3px solid ${bdr};margin-bottom:6px;">
+      <div style="font-weight:600;color:${txt};">${a.message}</div>
+      <div style="font-size:9px;color:${txt};opacity:0.75;margin-top:2px;font-style:italic;">Fix: ${a.fix}</div>
+    </div>`
+  }).join('') ?? ''
+
+  const html = `<!DOCTYPE html>
 <html>
 <head>
-  <title>${identity.design_number}_${identity.design_name}</title>
+  <meta charset="UTF-8">
+  <title>${identity.design_number || 'Report'} — ${identity.design_name || 'FabricAI'}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'DM Sans', sans-serif; color: #1B1F3B; padding: 40px; max-width: 800px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #E8A838; }
-    .logo { font-size: 22px; font-weight: 700; }
-    .logo span { color: #E8A838; }
-    .meta { font-size: 11px; color: #666; text-align: right; }
-    h2 { font-size: 14px; font-weight: 700; color: #E8A838; text-transform: uppercase; letter-spacing: 0.1em; margin: 24px 0 12px; }
-    .section { margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    td { padding: 8px 12px; border-bottom: 1px solid #E2E0D8; }
-    td:first-child { font-weight: 500; color: #666; width: 40%; }
-    td:last-child { font-weight: 600; }
-    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .calc-item { background: #F7F6F2; border-radius: 8px; padding: 14px; }
-    .calc-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #888; }
-    .calc-value { font-size: 22px; font-weight: 700; color: #1B1F3B; margin-top: 4px; }
-    .calc-value.highlight { color: #E8A838; font-size: 28px; }
-    .calc-unit { font-size: 11px; color: #888; }
-    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #E2E0D8; font-size: 10px; color: #999; text-align: center; }
-    .page-break { page-break-before: always; padding-top: 30px; }
-    .peg-grid { margin: 16px 0; }
-    .peg-row { display: flex; }
-    .peg-cell { width: 18px; height: 18px; border: 1px solid #E2E0D8; }
-    .peg-cell.filled { background: #1B1F3B; }
-    .sv-table tr:nth-child(even) td { background: #F7F6F2; }
-    @media print { body { padding: 20px; } .no-print { display: none; } }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;color:#1D1D1F;background:#fff;font-size:10px;}
+    /* ── PAGE SHELL ── */
+    .page{width:210mm;min-height:297mm;padding:14mm 14mm 10mm;page-break-after:always;position:relative;}
+    .page:last-child{page-break-after:avoid;}
+    /* ── HEADER ── */
+    .brand-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1.5px solid #1D1D1F;margin-bottom:12px;}
+    .brand-wordmark{font-size:18px;font-weight:800;letter-spacing:-0.04em;color:#1D1D1F;}
+    .brand-wordmark span{color:#007AFF;}
+    .brand-tagline{font-size:8px;color:#8E8E93;letter-spacing:.12em;text-transform:uppercase;margin-top:1px;}
+    .doc-meta{text-align:right;font-size:9px;color:#8E8E93;line-height:1.6;}
+    .doc-meta strong{color:#1D1D1F;font-size:11px;font-weight:700;}
+    /* ── SECTION HEADERS ── */
+    .sec-label{font-size:8px;font-weight:700;color:#007AFF;text-transform:uppercase;letter-spacing:.1em;margin:10px 0 4px;border-left:2px solid #007AFF;padding-left:5px;}
+    /* ── TWO-COL SPEC GRID ── */
+    .spec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+    .spec-card{background:#F9F9FB;border-radius:6px;padding:6px 10px;}
+    .spec-key{font-size:8px;color:#8E8E93;font-weight:500;}
+    .spec-val{font-size:12px;font-weight:700;color:#1D1D1F;margin-top:1px;}
+    .spec-val.accent{color:#007AFF;}
+    /* ── TABLES ── */
+    table{width:100%;border-collapse:collapse;}
+    th{font-size:8px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;padding:4px 6px;border-bottom:1px solid #E5E5EA;text-align:left;}
+    td{padding:4px 6px;border-bottom:1px solid #F2F2F7;vertical-align:top;}
+    /* ── MATRIX WRAPPER ── */
+    .matrix-wrap{overflow:hidden;border:1px solid #E5E5EA;border-radius:6px;padding:6px;background:#FAFAFA;display:inline-block;}
+    /* ── FOOTER ── */
+    .page-footer{position:absolute;bottom:9mm;left:14mm;right:14mm;font-size:8px;color:#C7C7CC;display:flex;justify-content:space-between;border-top:1px solid #F2F2F7;padding-top:4px;}
+    /* ── PILL BADGE ── */
+    .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:8px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+    .badge-blue{background:#EAF3FF;color:#007AFF;}
+    .badge-green{background:#E8F9EE;color:#34C759;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.page{page-break-after:always;}}
   </style>
 </head>
 <body>
-  <!-- PAGE 1: Identity + Yarn + Machine -->
-  <div class="header">
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 1 — Identity · Warp · Weft · Machine · Calc KPIs
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <!-- Header -->
+  <div class="brand-header">
     <div>
-      <div class="logo">Fabric<span>AI</span> Studio</div>
+      <div class="brand-wordmark">Fabric<span>AI</span> Studio</div>
+      <div class="brand-tagline">Industrial Textile Engineering Report</div>
     </div>
-    <div class="meta">
-      <div>${loom ? 'Factory Document' : ''}</div>
-      <div>${new Date().toLocaleDateString()}</div>
-      <div>Version ${state.designId ? '1.0' : 'Draft'}</div>
+    <div class="doc-meta">
+      <strong>${identity.design_name || '—'}</strong><br>
+      ${identity.design_number || '—'} &nbsp;·&nbsp; ${identity.quality_name || '—'}<br>
+      Customer: ${identity.customer_ref || '—'}<br>
+      ${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+      &nbsp;<span class="badge badge-blue">Draft</span>
     </div>
   </div>
 
-  <div class="section">
-    <h2>Design Identity</h2>
-    <table>
-      <tr><td>Design Name</td><td>${identity.design_name || '—'}</td></tr>
-      <tr><td>Design Number</td><td>${identity.design_number || '—'}</td></tr>
-      <tr><td>Quality Name</td><td>${identity.quality_name || '—'}</td></tr>
-      <tr><td>Customer Reference</td><td>${identity.customer_ref || '—'}</td></tr>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Warp Specification</h2>
-    <table>
-      <tr><td>Count</td><td>${warp?.count_value || '—'} ${warp?.count_system === 'denier' ? 'D' : 'Ne'}${warp?.filament_count ? `/${warp.filament_count}f` : ''}</td></tr>
-      <tr><td>Material</td><td>${warp?.material || '—'}</td></tr>
-      <tr><td>Luster</td><td>${warp?.luster || '—'}</td></tr>
-      <tr><td>Colour</td><td>${warp?.colour_code || '—'}</td></tr>
-      <tr><td>EPI</td><td>${calcOutputs?.epi || '—'}</td></tr>
-      <tr><td>Reed Count</td><td>${loom?.reed_count_stockport || '—'}s Stockport</td></tr>
-      <tr><td>Ends / Dent</td><td>${loom?.ends_per_dent || '—'}</td></tr>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Weft Specification</h2>
-    <table>
-      ${weftYarnRows}
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Machine Parameters</h2>
-    <table>
-      <tr><td>Machine Type</td><td>${loom?.machine_type?.replace(/_/g, ' ') || '—'}</td></tr>
-      <tr><td>Dobby Type</td><td>${loom?.dobby_type || '—'}</td></tr>
-      <tr><td>RPM</td><td>${loom?.machine_rpm || '—'}</td></tr>
-      <tr><td>Cloth Width</td><td>${loom?.cloth_width_inches || '—'}"</td></tr>
-      <tr><td>Efficiency</td><td>${loom?.loom_efficiency_pct || '—'}%</td></tr>
-      <tr><td>Total Nozzles</td><td>${weftSystem.total_nozzles_available}</td></tr>
-    </table>
-  </div>
-
-  ${loom?.sv1_psi ? `
-  <div class="section">
-    <h2>Pneumatic Settings</h2>
-    <table class="sv-table">
-      <tr><td>SV1 — Cloth Storage</td><td>${loom.sv1_psi} PSI</td></tr>
-      <tr><td>SV2 — Beater</td><td>${loom.sv2_psi} PSI</td></tr>
-      <tr><td>SV3 — Dobby</td><td>${loom.sv3_psi} PSI</td></tr>
-      <tr><td>SV4 — Shuttle Right</td><td>${loom.sv4_psi} PSI</td></tr>
-      <tr><td>SV5 — Shuttle Left</td><td>${loom.sv5_psi} PSI</td></tr>
-    </table>
-  </div>
-  ` : ''}
-
-  <!-- PAGE 2: Peg Plan -->
-  <div class="page-break">
-    <h2>Peg Plan</h2>
-    ${state.pegPlanMatrix.length > 0 ? `
-    <div class="peg-grid">
-      ${state.pegPlanMatrix.map((row, ri) => `
-        <div class="peg-row">
-          <span style="width:24px;font-size:10px;color:#888;text-align:right;padding-right:4px;display:inline-block;">${ri + 1}</span>
-          ${row.map((cell) => `<div class="peg-cell${cell ? ' filled' : ''}"></div>`).join('')}
-        </div>
-      `).join('')}
+  <!-- Warp & Machine side-by-side -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <!-- Warp -->
+    <div>
+      <div class="sec-label">Warp Specification</div>
+      <div class="spec-grid">
+        <div class="spec-card"><div class="spec-key">Count</div><div class="spec-val accent">${warp?.count_value || '—'}${warp?.count_system === 'denier' ? 'D' : 'Ne'}${warp?.filament_count ? `/${warp.filament_count}f` : ''}</div></div>
+        <div class="spec-card"><div class="spec-key">Material</div><div class="spec-val">${warp?.material || '—'}</div></div>
+        <div class="spec-card"><div class="spec-key">Luster</div><div class="spec-val">${warp?.luster || '—'}</div></div>
+        <div class="spec-card"><div class="spec-key">Colour Code</div><div class="spec-val">${warp?.colour_code || '—'}</div></div>
+        <div class="spec-card"><div class="spec-key">EPI</div><div class="spec-val accent">${calcOutputs?.epi || '—'}</div></div>
+        <div class="spec-card"><div class="spec-key">Reed</div><div class="spec-val">${loom?.reed_count_stockport || '—'}s / ${loom?.ends_per_dent || '—'}EPD</div></div>
+      </div>
     </div>
-    ` : '<p style="color:#888;font-size:13px;">No peg plan defined</p>'}
-
-    ${weftSystem.mode === 'advanced' && weftSystem.insertion_sequence.pattern.length > 0 ? `
-    <h2>Master Weft Insertion Pattern</h2>
-    <div style="font-size:18px;font-weight:700;padding:16px;background:#F7F6F2;border-radius:8px;">
-      ${weftSystem.insertion_sequence.pattern.map(id => weftSystem.yarns.find(y => y.id === id)?.label).join(' – ')}
+    <!-- Machine -->
+    <div>
+      <div class="sec-label">Machine Parameters</div>
+      <div class="spec-grid">
+        <div class="spec-card"><div class="spec-key">Type</div><div class="spec-val">${loom?.machine_type?.replace(/_/g,' ') || '—'}</div></div>
+        <div class="spec-card"><div class="spec-key">Dobby</div><div class="spec-val">${loom?.dobby_type || '—'}</div></div>
+        <div class="spec-card"><div class="spec-key">RPM</div><div class="spec-val accent">${loom?.machine_rpm || '—'}</div></div>
+        <div class="spec-card"><div class="spec-key">Width</div><div class="spec-val">${loom?.cloth_width_inches || '—'}"</div></div>
+        <div class="spec-card"><div class="spec-key">Efficiency</div><div class="spec-val">${loom?.loom_efficiency_pct || '—'}%</div></div>
+        <div class="spec-card"><div class="spec-key">Nozzles</div><div class="spec-val">${weftSystem.total_nozzles_available}</div></div>
+        ${loom?.sv1_psi ? `<div class="spec-card"><div class="spec-key">SV1–SV3</div><div class="spec-val" style="font-size:10px;">${loom.sv1_psi} / ${loom.sv2_psi} / ${loom.sv3_psi} PSI</div></div>
+        <div class="spec-card"><div class="spec-key">SV4–SV5</div><div class="spec-val" style="font-size:10px;">${loom.sv4_psi} / ${loom.sv5_psi} PSI</div></div>` : ''}
+      </div>
     </div>
-    ` : ''}
   </div>
 
-  <!-- PAGE 3: Calculations -->
+  <!-- Weft Yarns -->
+  <div class="sec-label" style="margin-top:12px;">Weft System — ${weftSystem.yarns.length} Yarn${weftSystem.yarns.length !== 1 ? 's' : ''}</div>
+  <table>
+    <thead><tr>
+      <th>Yarn</th><th>Count</th><th>Material</th><th>Nozzles</th><th>Pressure</th><th>Shrinkage</th>
+    </tr></thead>
+    <tbody>${weftRows}</tbody>
+  </table>
+
+  <!-- Calc KPIs strip -->
   ${calcOutputs ? `
-  <div class="page-break">
-    <h2>Fabric Output Calculations</h2>
-    <div class="calc-grid">
-      <div class="calc-item">
-        <div class="calc-label">GSM</div>
-        <div class="calc-value highlight">${calcOutputs.gsm.toFixed(1)}</div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">EPI</div>
-        <div class="calc-value">${calcOutputs.epi}</div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Reed Space</div>
-        <div class="calc-value">${calcOutputs.reed_space_inches.toFixed(1)} <span class="calc-unit">inches</span></div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Total Warp Ends</div>
-        <div class="calc-value">${calcOutputs.total_warp_ends.toLocaleString()}</div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Linear Weight</div>
-        <div class="calc-value">${calcOutputs.linear_meter_weight_g.toFixed(1)} <span class="calc-unit">g/m</span></div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">oz/yd²</div>
-        <div class="calc-value">${calcOutputs.oz_per_sq_yard.toFixed(2)}</div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Warp Weight</div>
-        <div class="calc-value">${calcOutputs.warp_weight_per_100m_g.toFixed(0)} <span class="calc-unit">g/100m</span></div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Weft Weight</div>
-        <div class="calc-value">${calcOutputs.weft_weight_per_100m_g.toFixed(0)} <span class="calc-unit">g/100m</span></div>
-      </div>
-      <div class="calc-item" style="grid-column:span 2;">
-        <div class="calc-label">Production Rate (Actual)</div>
-        <div class="calc-value">${calcOutputs.production_m_per_hr.toFixed(2)} <span class="calc-unit">m/hr</span></div>
-        <div style="font-size:10px;color:#888;margin-top:4px;">= (${loom?.machine_rpm} RPM × 60) / (${loom?.target_ppi} PPI × 39.37) × ${loom?.loom_efficiency_pct}%</div>
-      </div>
-    </div>
-  </div>
-  ` : ''}
-
-  <!-- PAGE 4: Fabric Simulation Report -->
-  ${calcOutputs?.simulation ? `
-  <div class="page-break">
-    <h2>Fabric Output Simulation Report</h2>
-    
-    <div style="text-align:center;padding:20px;background:#FFF8E8;border-radius:12px;margin-bottom:20px;border:1px solid #F0D68A;">
-      <div style="font-size:10px;font-weight:700;color:#E8A838;text-transform:uppercase;letter-spacing:0.2em;">Identified Fabric Profile</div>
-      <div style="font-size:24px;font-weight:800;color:#1B1F3B;margin:8px 0 4px;text-transform:capitalize;">${calcOutputs.simulation.archetype}</div>
-      <div style="font-size:12px;color:#666;">${calcOutputs.simulation.archetype_description}</div>
-    </div>
-
-    <div class="calc-grid">
-      <div class="calc-item" style="border-left:4px solid #C41E3A;">
-        <div class="calc-label">Shrinkage</div>
-        <div class="calc-value" style="color:#C41E3A;">${calcOutputs.simulation.shrinkage_pct.toFixed(1)}<span class="calc-unit">%</span></div>
-        <div style="height:6px;background:#F0EEEE;border-radius:3px;margin-top:8px;overflow:hidden;">
-          <div style="height:100%;width:${Math.round((calcOutputs.simulation.shrinkage_pct / 35) * 100)}%;background:#C41E3A;border-radius:3px;"></div>
-        </div>
-      </div>
-      <div class="calc-item" style="border-left:4px solid #2980B9;">
-        <div class="calc-label">Drape Index</div>
-        <div class="calc-value" style="color:#2980B9;">${calcOutputs.simulation.drape_index}<span class="calc-unit">/ 100</span></div>
-        <div style="height:6px;background:#F0EEEE;border-radius:3px;margin-top:8px;overflow:hidden;">
-          <div style="height:100%;width:${calcOutputs.simulation.drape_index}%;background:#2980B9;border-radius:3px;"></div>
-        </div>
-      </div>
-      <div class="calc-item" style="border-left:4px solid #E67E22;">
-        <div class="calc-label">Stiffness Index</div>
-        <div class="calc-value" style="color:#E67E22;">${calcOutputs.simulation.stiffness_index}<span class="calc-unit">/ 100</span></div>
-        <div style="height:6px;background:#F0EEEE;border-radius:3px;margin-top:8px;overflow:hidden;">
-          <div style="height:100%;width:${calcOutputs.simulation.stiffness_index}%;background:#E67E22;border-radius:3px;"></div>
-        </div>
-      </div>
-      <div class="calc-item" style="border-left:4px solid #27AE60;">
-        <div class="calc-label">Fabric Strength</div>
-        <div class="calc-value" style="color:#27AE60;">${calcOutputs.simulation.strength_n_per_cm.toFixed(1)}<span class="calc-unit">N/cm</span></div>
-        <div style="height:6px;background:#F0EEEE;border-radius:3px;margin-top:8px;overflow:hidden;">
-          <div style="height:100%;width:${Math.round(Math.min(calcOutputs.simulation.strength_n_per_cm / 400, 1) * 100)}%;background:#27AE60;border-radius:3px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="calc-grid" style="margin-top:16px;">
-      <div class="calc-item">
-        <div class="calc-label">Dimensional Stability</div>
-        <div class="calc-value">${calcOutputs.simulation.dimensional_stability}<span class="calc-unit">/ 100</span></div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Softness</div>
-        <div class="calc-value">${calcOutputs.simulation.softness}<span class="calc-unit">/ 100</span></div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Handle Score</div>
-        <div class="calc-value">${calcOutputs.simulation.handle_score}<span class="calc-unit">/ 100</span></div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Cover Factor</div>
-        <div class="calc-value">${calcOutputs.simulation.cover_factor.toFixed(2)}</div>
-      </div>
-    </div>
-
-    <h2 style="margin-top:24px;">Warp Material Contribution</h2>
-    <table>
-      <tr><td>Material</td><td>${calcOutputs.simulation.warp_contribution.material}</td></tr>
-      <tr><td>Shrink Base</td><td>${calcOutputs.simulation.warp_contribution.shrink_base}%</td></tr>
-      <tr><td>Drape Base</td><td>${calcOutputs.simulation.warp_contribution.drape_base}</td></tr>
-      <tr><td>Stiffness Base</td><td>${calcOutputs.simulation.warp_contribution.stiff_base}</td></tr>
-      <tr><td>Tenacity Base</td><td>${calcOutputs.simulation.warp_contribution.tenacity_base} N/cm</td></tr>
-    </table>
-
-    ${calcOutputs.simulation.weft_contributions.length > 0 ? `
-    <h2 style="margin-top:20px;">Weft Material Contributions</h2>
-    <table>
-      ${calcOutputs.simulation.weft_contributions.map((w: { yarn_label: string; material: string; shrink_base: number; drape_base: number; stiff_base: number; tenacity_base: number }) => `
-        <tr style="border-bottom:2px solid #E8A838;"><td colspan="2" style="font-weight:700;">${w.yarn_label} — ${w.material}</td></tr>
-        <tr><td>Shrink Base</td><td>${w.shrink_base}%</td></tr>
-        <tr><td>Drape Base</td><td>${w.drape_base}</td></tr>
-        <tr><td>Stiffness Base</td><td>${w.stiff_base}</td></tr>
-        <tr><td>Tenacity Base</td><td>${w.tenacity_base} N/cm</td></tr>
-      `).join('')}
-    </table>
-    ` : ''}
-
-    <h2 style="margin-top:20px;">Engineering Alerts</h2>
-    ${calcOutputs.simulation.alerts.map((a: { severity: string; message: string; fix: string }) => {
-      const alertColors: Record<string, string> = { ok: '#eaf3de', warn: '#faeeda', danger: '#fcebeb', info: '#e6f1fb' }
-      const borderColors: Record<string, string> = { ok: '#3b6d11', warn: '#ba7517', danger: '#a32d2d', info: '#185fa5' }
-      return `<div style="padding:10px 14px;border-radius:8px;margin-bottom:8px;background:${alertColors[a.severity] || '#f0f0f0'};border-left:3px solid ${borderColors[a.severity] || '#888'};font-size:12px;">
-        <strong>${a.message}</strong><br/>
-        <span style="font-size:10px;color:#888;">Recommended: ${a.fix}</span>
+  <div class="sec-label" style="margin-top:12px;">Key Output Metrics</div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
+    ${[
+      ['GSM', calcOutputs.gsm.toFixed(1), '#FF9500'],
+      ['Linear Wt', `${calcOutputs.linear_meter_weight_g.toFixed(1)} g/m`, '#007AFF'],
+      ['Total Ends', calcOutputs.total_warp_ends.toLocaleString(), '#34C759'],
+      ['Production', `${calcOutputs.production_m_per_hr.toFixed(2)} m/hr`, '#AF52DE'],
+      ['Cost/m', `$${calcOutputs.cost_per_meter.toFixed(2)}`, '#FF9500'],
+    ].map(([lbl, val, col]) =>
+      `<div style="background:#F9F9FB;border-radius:6px;padding:7px 8px;border-top:2px solid ${col};text-align:center;">
+        <div style="font-size:8px;font-weight:600;color:#8E8E93;text-transform:uppercase;">${lbl}</div>
+        <div style="font-size:13px;font-weight:800;color:#1D1D1F;margin-top:2px;">${val}</div>
       </div>`
-    }).join('')}
-
-    <h2 style="margin-top:20px;">Simulation Formulas</h2>
-    <table>
-      <tr><td>Shrinkage %</td><td style="font-family:monospace;font-size:10px;">S% = S_base × (1 + regain/100 × 1.8) × crimp × density × tension</td></tr>
-      <tr><td>Drape Index</td><td style="font-family:monospace;font-size:10px;">D = D_base × weave_mod × density^0.4 × fineness × (1 − tension×0.22)</td></tr>
-      <tr><td>Stiffness</td><td style="font-family:monospace;font-size:10px;">ST = ST_base × weave_mod × density^0.6 × coarseness × tension</td></tr>
-      <tr><td>Strength</td><td style="font-family:monospace;font-size:10px;">FS = (T × density × weave × cover × elong) / Ne^0.45</td></tr>
-    </table>
+    ).join('')}
   </div>
-  ` : ''}
+  <div style="margin-top:6px;font-size:8px;color:#8E8E93;">
+    Production = (${loom?.machine_rpm ?? '?'} RPM × 60) / (${loom?.target_ppi ?? '?'} PPI × 39.37) × ${loom?.loom_efficiency_pct ?? '?'}%
+    &nbsp;|&nbsp; Warp ${calcOutputs.warp_cost_pct}% · Weft ${calcOutputs.weft_cost_pct}%
+  </div>` : ''}
 
-  <!-- PAGE 5: Costing Summary -->
-  ${calcOutputs ? `
-  <div class="page-break">
-    <h2>Costing Summary</h2>
-    <div class="calc-grid">
-      <div class="calc-item" style="grid-column:span 2;text-align:center;">
-        <div class="calc-label">Estimated Cost per Linear Meter</div>
-        <div class="calc-value highlight" style="font-size:36px;">$${calcOutputs.cost_per_meter.toFixed(2)}</div>
-        <div style="font-size:11px;color:#888;margin-top:4px;">Raw Material Cost (Warp + Weft)</div>
+  <!-- Insertion pattern -->
+  ${weftSystem.mode === 'advanced' && weftSystem.insertion_sequence.pattern.length > 0 ? `
+  <div class="sec-label" style="margin-top:10px;">Master Insertion Pattern</div>
+  <div style="font-size:10px;font-weight:600;padding:6px 10px;background:#F9F9FB;border-radius:6px;letter-spacing:.05em;">
+    ${weftSystem.insertion_sequence.pattern.map((id: string) => weftSystem.yarns.find((y: { id: string; label: string }) => y.id === id)?.label ?? id).join(' → ')}
+  </div>` : ''}
+
+  <div class="page-footer">
+    <span>FabricAI Studio — Solerix Technologies</span>
+    <span>${identity.design_number || 'Draft'} · Page 1 of 3</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 2 — Peg Plan + Draft Plan (Matrix + Text)
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="brand-header">
+    <div>
+      <div class="brand-wordmark">Fabric<span>AI</span> Studio</div>
+      <div class="brand-tagline">Pattern Engineering</div>
+    </div>
+    <div class="doc-meta">
+      <strong>${identity.design_name || '—'}</strong><br>
+      ${identity.design_number || '—'} &nbsp;·&nbsp; Shafts: ${state.shaftCount}
+    </div>
+  </div>
+
+  <!-- Peg Plan + Draft Plan side by side -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+    <!-- LEFT: Peg Plan -->
+    <div>
+      <div class="sec-label">Peg Plan — Numeric</div>
+      ${state.pegPlanText ? `
+      <div style="background:#F9F9FB;border-radius:6px;padding:6px 8px;max-height:90mm;overflow:hidden;">
+        <table style="width:auto;">
+          <tbody>${pegTextLines}</tbody>
+        </table>
+      </div>` : '<div style="color:#8E8E93;font-size:10px;">No peg plan defined</div>'}
+
+      <div class="sec-label" style="margin-top:8px;">Peg Plan — Matrix</div>
+      ${pegMatrix.length > 0 ? `
+      <div class="matrix-wrap">
+        <svg width="${pegSVGW}" height="${pegSVGH}" xmlns="http://www.w3.org/2000/svg">
+          ${pegSVGRows}
+        </svg>
       </div>
-      <div class="calc-item">
-        <div class="calc-label">Warp Cost Share</div>
-        <div class="calc-value">${calcOutputs.warp_cost_pct}<span class="calc-unit">%</span></div>
+      <div style="margin-top:3px;font-size:8px;color:#8E8E93;">
+        ${pegMatrix.length} picks × ${pegCols} shaft${pegCols !== 1 ? 's' : ''}
+        &nbsp;·&nbsp; ■ = Peg engaged
+      </div>` : ''}
+    </div>
+
+    <!-- RIGHT: Draft Plan (Threading Draft) -->
+    <div>
+      <div class="sec-label">Draft Plan — Numeric (Shaft per End)</div>
+      <div style="background:#EAF3FF;border-radius:6px;padding:6px 8px;max-height:90mm;overflow:hidden;">
+        <table style="width:auto;">
+          <tbody>${draftTextLines}</tbody>
+        </table>
       </div>
-      <div class="calc-item">
-        <div class="calc-label">Weft Cost Share</div>
-        <div class="calc-value">${calcOutputs.weft_cost_pct}<span class="calc-unit">%</span></div>
+
+      <div class="sec-label" style="margin-top:8px;">Draft Plan — Threading Matrix</div>
+      <div class="matrix-wrap" style="border-color:#BFDBFF;">
+        <svg width="${draftSVGW}" height="${draftSVGH}" xmlns="http://www.w3.org/2000/svg">
+          ${draftSVGRows}
+        </svg>
+      </div>
+      <div style="margin-top:3px;font-size:8px;color:#8E8E93;">
+        ${numShafts} shafts × ${numEnds} ends
+        &nbsp;·&nbsp; <span style="color:#007AFF;">■</span> = End threaded on shaft
       </div>
     </div>
   </div>
-  ` : ''}
 
-  <div class="footer">
-    Generated by FabricAI Studio · Solerix Technologies · ${new Date().toLocaleDateString()}
+  <div class="page-footer">
+    <span>FabricAI Studio — Solerix Technologies</span>
+    <span>${identity.design_number || 'Draft'} · Page 2 of 3</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 3 — Fabric Simulation (matches website SimulationPanel)
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="brand-header">
+    <div>
+      <div class="brand-wordmark">Fabric<span>AI</span> Studio</div>
+      <div class="brand-tagline">Fabric Simulation Report</div>
+    </div>
+    <div class="doc-meta">
+      <strong>${identity.design_name || '—'}</strong><br>
+      ${identity.design_number || '—'}
+      ${sim ? `&nbsp;·&nbsp; <span style="color:#007AFF;font-weight:700;text-transform:capitalize;">${sim.archetype}</span>` : ''}
+    </div>
   </div>
 
-  <script>
-    window.onload = function() { window.print(); }
-  </script>
+  ${sim ? `
+  <!-- Archetype Header (matches website's prominent archetype card) -->
+  <div style="background:linear-gradient(135deg,rgba(232,168,56,0.1) 0%,rgba(232,168,56,0.02) 100%);border:1.5px solid rgba(232,168,56,0.3);border-radius:12px;padding:16px 20px;text-align:center;margin-bottom:12px;">
+    <div style="font-size:8px;font-weight:700;color:#E8A838;text-transform:uppercase;letter-spacing:.2em;margin-bottom:6px;">Identified Fabric Profile</div>
+    <div style="font-size:20px;font-weight:800;color:#1D1D1F;letter-spacing:-0.02em;margin-bottom:5px;">${sim.archetype.split(' ').map((s: string) => s[0].toUpperCase() + s.slice(1)).join(' ')}</div>
+    <div style="font-size:10px;color:#8E8E93;max-width:340px;margin:0 auto;line-height:1.55;">${sim.archetype_description}</div>
+  </div>
+
+  <!-- Material & Weave Info (matches website 2-col card) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+    <div style="background:#F9F9FB;border:1px solid #E5E5EA;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:8px;font-weight:700;color:#8E8E93;text-transform:uppercase;margin-bottom:6px;">Warp Material</div>
+      <div style="font-size:13px;font-weight:600;color:#1D1D1F;">${warp?.material || '—'}</div>
+    </div>
+    <div style="background:#F9F9FB;border:1px solid #E5E5EA;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:8px;font-weight:700;color:#8E8E93;text-transform:uppercase;margin-bottom:6px;">Weave Structure</div>
+      <div style="font-size:13px;font-weight:600;color:#1D1D1F;">${loom?.weave_type?.replace(/_/g,' ') || '—'}</div>
+    </div>
+  </div>
+
+  <!-- Fabric Output Simulation Scores (SAME 4 as website: Shrinkage/Drape/Stiffness/Strength) -->
+  <div class="sec-label">Fabric Output Simulation</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;">
+    ${simScoreHTML}
+  </div>
+
+  <!-- Weave Preview + Radar side-by-side (matches website layout) -->
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;margin-bottom:12px;">
+    <!-- Tiled weave visual (larger, matches website fabric preview) -->
+    <div>
+      <div class="sec-label" style="margin-bottom:6px;">Weave Preview</div>
+      <div style="border:1px solid #E5E5EA;border-radius:8px;overflow:hidden;display:inline-block;">
+        <svg width="${fabricW}" height="${fabricH}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="${fabricW}" height="${fabricH}" fill="${weftHex}"/>
+          ${fabricRects}
+        </svg>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:5px;font-size:9px;color:#8E8E93;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:${warpHex};border-radius:2px;margin-right:3px;vertical-align:middle;"></span>Warp</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:${weftHex};border-radius:2px;margin-right:3px;vertical-align:middle;"></span>Weft</span>
+      </div>
+      <div style="font-size:8px;color:#C8C8CC;margin-top:3px;">${fabricRows}×${fabricCols} repeat · ${warpHex} / ${weftHex}</div>
+    </div>
+    <!-- Output Profile Radar (matches website RadarDisplay) -->
+    <div>
+      <div class="sec-label" style="margin-bottom:6px;">Output Profile Radar</div>
+      <div style="background:#F9F9FB;border:1px solid #E5E5EA;border-radius:10px;padding:10px;display:inline-block;">
+        ${radarSVG}
+      </div>
+    </div>
+  </div>
+
+  <!-- Engineering Alerts (matches website AlertCard with Fix text) -->
+  ${alertsHTML ? `
+  <div class="sec-label">Engineering Alerts</div>
+  <div style="margin-bottom:12px;">${alertsHTML}</div>` : ''}
+
+  <!-- Simulation Formulas (matches website formula section) -->
+  <div class="sec-label">Simulation Formulas</div>
+  <div style="background:#F9F9FB;border-radius:10px;padding:12px 14px;">
+    ${[
+      { name: 'Shrinkage %', formula: 'S% = S_base × (1 + regain/100 × 1.8) × crimp_factor × (1 + density_norm × 0.25) × (1 + tension_norm × 0.6)' },
+      { name: 'Drape Index', formula: 'D = D_base × weave_drape_mod × (1 − density_norm×0.55)^0.4 × ln(Ne/10)/ln(12) × (1 − tension_norm×0.22)' },
+      { name: 'Stiffness', formula: 'ST = ST_base × weave_stiff_mod × density_norm^0.6 × (30/Ne) × (1 + tension_norm×0.35)' },
+      { name: 'Strength', formula: 'FS [N/cm] = (T_fiber × density/10 × weave_str_mod × cover_factor × (1+elong/200)) / (Ne/30)^0.45' },
+    ].map(f => `
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;margin-bottom:7px;align-items:start;font-size:10px;">
+        <span style="font-weight:600;color:#1D1D1F;">${f.name}</span>
+        <span style="font-family:monospace;color:#8E8E93;font-size:8px;line-height:1.55;">${f.formula}</span>
+      </div>`
+    ).join('')}
+  </div>` : `
+  <div style="text-align:center;padding:40px 20px;color:#8E8E93;font-size:11px;">
+    <div style="font-size:24px;margin-bottom:10px;opacity:0.4;">🔬</div>
+    Fill in yarn + loom specs to see the fabric simulation engine.
+  </div>`}
+
+  <!-- Costing callout -->
+  ${calcOutputs ? `
+  <div style="margin-top:12px;background:#F9F9FB;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <div style="font-size:8px;font-weight:600;color:#8E8E93;text-transform:uppercase;">Estimated Cost / Linear Metre</div>
+      <div style="font-size:22px;font-weight:800;color:#007AFF;letter-spacing:-0.03em;">$${calcOutputs.cost_per_meter.toFixed(2)}</div>
+    </div>
+    <div style="font-size:9px;color:#8E8E93;text-align:right;line-height:1.7;">
+      Warp ${calcOutputs.warp_weight_per_100m_g.toFixed(0)} g/100m<br>
+      Weft ${calcOutputs.weft_weight_per_100m_g.toFixed(0)} g/100m<br>
+      GSM ${calcOutputs.gsm.toFixed(1)} · oz/yd² ${calcOutputs.oz_per_sq_yard.toFixed(2)}
+    </div>
+  </div>` : ''}
+
+  <div class="page-footer">
+    <span>FabricAI Studio — Solerix Technologies</span>
+    <span>${identity.design_number || 'Draft'} · Page 3 of 3</span>
+  </div>
+</div>
+
+<script>window.onload=function(){window.print();}</script>
 </body>
 </html>`
 
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) { alert('Please allow popups to download the PDF'); return }
   printWindow.document.write(html)
   printWindow.document.close()
 }

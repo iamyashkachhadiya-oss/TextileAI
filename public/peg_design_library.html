@@ -1,0 +1,369 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.wrap{padding:1rem 0}
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1rem}
+.search-box{flex:1;min-width:180px;padding:8px 12px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.search-box:focus{outline:none;border-color:var(--color-border-primary)}
+.count-badge{font-size:12px;color:var(--color-text-secondary);white-space:nowrap}
+.layout{display:flex;gap:16px;align-items:flex-start}
+.sidebar{width:200px;flex-shrink:0}
+.sidebar-section{margin-bottom:1.25rem}
+.sidebar-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.filter-option{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-primary);padding:3px 0;cursor:pointer}
+.filter-option input{cursor:pointer;accent-color:#3266ad}
+.filter-option span{flex:1}
+.filter-option .cnt{font-size:11px;color:var(--color-text-tertiary)}
+select.filter-select{width:100%;padding:6px 8px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer}
+.clear-btn{font-size:12px;color:#3266ad;cursor:pointer;background:none;border:none;padding:0;margin-top:4px}
+.grid{flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px;cursor:pointer;transition:border-color 0.15s}
+.card:hover{border-color:var(--color-border-primary)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.fabric-badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500}
+.pop-bar-wrap{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.pop-bar-bg{flex:1;height:3px;background:var(--color-border-tertiary);border-radius:2px}
+.pop-bar{height:3px;border-radius:2px;background:#3266ad}
+.pop-val{font-size:10px;color:var(--color-text-tertiary);min-width:24px;text-align:right}
+.card-name{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;line-height:1.3}
+.card-sub{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px}
+.peg-canvas{width:100%;image-rendering:pixelated;border-radius:4px;display:block}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.tag{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.no-results{text-align:center;padding:3rem 1rem;color:var(--color-text-secondary);font-size:14px}
+.modal-bg{position:absolute;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;z-index:10}
+.modal{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-secondary);padding:1.25rem;width:100%;max-width:520px}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
+.modal-title{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+.close-btn{background:none;border:none;font-size:18px;cursor:pointer;color:var(--color-text-secondary);line-height:1}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.modal-field{font-size:12px}
+.modal-label{color:var(--color-text-secondary);margin-bottom:2px}
+.modal-val{font-weight:500;color:var(--color-text-primary)}
+.modal-desc{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1rem}
+.modal-peg{display:flex;justify-content:center;margin-bottom:1rem}
+.matrix-table{border-collapse:collapse}
+.matrix-table td{width:20px;height:20px;border:1px solid var(--color-border-tertiary)}
+.cell-on{background:#1a3a6b}
+.cell-off{background:var(--color-background-secondary)}
+</style>
+<div class="wrap" id="root">
+<div class="topbar">
+  <input class="search-box" id="search" placeholder="Search designs, tags, ratios..." />
+  <span class="count-badge" id="count-badge">135 designs</span>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Fabric type</div>
+      <div id="fabric-filters"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Weave type</div>
+      <div id="weave-filters"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Shaft count</div>
+      <select class="filter-select" id="shaft-select">
+        <option value="">All shafts</option>
+        <option value="2-4">2–4 shafts</option>
+        <option value="5-8">5–8 shafts</option>
+        <option value="9-16">9–16 shafts</option>
+        <option value="17-24">17–24 shafts</option>
+      </select>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Weight</div>
+      <select class="filter-select" id="weight-select">
+        <option value="">All weights</option>
+        <option value="Ultra Light">Ultra light</option>
+        <option value="Light">Light</option>
+        <option value="Medium">Medium</option>
+        <option value="Heavy">Heavy</option>
+        <option value="Extra Heavy">Extra heavy</option>
+      </select>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Sort by</div>
+      <select class="filter-select" id="sort-select">
+        <option value="popularity">Popularity</option>
+        <option value="name">Name A–Z</option>
+        <option value="shaft_asc">Shaft count ↑</option>
+        <option value="shaft_desc">Shaft count ↓</option>
+      </select>
+    </div>
+    <button class="clear-btn" onclick="clearFilters()">Clear all filters</button>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+</div>
+
+<script>
+const fabricColors = {
+  'Denim':{'bg':'#dbeafe','text':'#1e40af'},
+  'Shirting':{'bg':'#d1fae5','text':'#065f46'},
+  'Suiting':{'bg':'#ede9fe','text':'#5b21b6'},
+  'Canvas/Duck':{'bg':'#fef3c7','text':'#92400e'},
+  'Poplin/Lawn':{'bg':'#fce7f3','text':'#9d174d'},
+  'Tweed':{'bg':'#f3f4f6','text':'#374151'},
+  'Corduroy':{'bg':'#ffedd5','text':'#9a3412'},
+  'Crepe':{'bg':'#e0f2fe','text':'#075985'},
+  'Dobby Fancy/Fashion':{'bg':'#fdf4ff','text':'#7e22ce'}
+};
+
+const DB = [
+  {id:"D001",name:"Classic 3/1 right hand twill",fabric_type:"Denim",weave_type:"Twill",twill_ratio:"3/1",direction:"Z",shaft_count:4,repeat_size:4,angle:45,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["classic","rigid","standard","indigo"],peg_matrix:[[1,1,1,0],[0,1,1,1],[1,0,1,1],[1,1,0,1]],popularity:99,description:"Most widely used denim weave globally. Classic diagonal line going right (Z direction)."},
+  {id:"D002",name:"3/1 left hand twill",fabric_type:"Denim",weave_type:"Twill",twill_ratio:"3/1",direction:"S",shaft_count:4,repeat_size:4,angle:45,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["classic","rigid","left-hand"],peg_matrix:[[1,0,1,1],[1,1,0,1],[1,1,1,0],[0,1,1,1]],popularity:90,description:"Mirror image of RHT. Produces S-twill diagonal. Used in some Japanese selvedge denim."},
+  {id:"D003",name:"2/1 twill denim",fabric_type:"Denim",weave_type:"Twill",twill_ratio:"2/1",direction:"Z",shaft_count:3,repeat_size:3,angle:45,float_length:"short",threading:"Straight",weight:"Medium",tags:["lightweight","soft","chambray-style"],peg_matrix:[[1,1,0],[0,1,1],[1,0,1]],popularity:75,description:"Lighter denim weave, softer hand feel. Used for chambray-style or light denim shirts."},
+  {id:"D004",name:"Broken twill denim",fabric_type:"Denim",weave_type:"Broken Twill",twill_ratio:"3/1",direction:"ZS",shaft_count:4,repeat_size:8,angle:45,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["stretch","fashion","no-diagonal","Wrangler-style"],peg_matrix:[[1,1,1,0,0,1,1,1],[0,1,1,1,1,0,1,1],[1,0,1,1,1,1,0,1],[1,1,0,1,1,1,1,0]],popularity:88,description:"Eliminates the diagonal twill line. Preferred for stretch denim. Associated with Wrangler jeans."},
+  {id:"D005",name:"Reverse twill / herringbone denim",fabric_type:"Denim",weave_type:"Herringbone",twill_ratio:"3/1",direction:"ZS alternating",shaft_count:8,repeat_size:8,angle:45,float_length:"medium",threading:"Point",weight:"Heavy",tags:["fashion","herringbone","decorative","premium"],peg_matrix:[[1,1,1,0,0,1,1,1],[0,1,1,1,1,0,1,1],[1,0,1,1,1,1,0,1],[1,1,0,1,1,1,1,0],[1,1,1,0,0,1,1,1],[0,1,1,1,1,0,1,1],[1,0,1,1,1,1,0,1],[1,1,0,1,1,1,1,0]],popularity:72,description:"Alternating Z and S twill directions create a herringbone pattern in denim."},
+  {id:"D006",name:"Steep twill denim (63°)",fabric_type:"Denim",weave_type:"Steep Twill",twill_ratio:"3/1",direction:"Z",shaft_count:4,repeat_size:4,angle:63,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["premium","steep","pronounced-diagonal"],peg_matrix:[[1,1,1,0],[1,1,0,1],[1,0,1,1],[0,1,1,1]],popularity:65,description:"Steep 63° twill angle gives more pronounced diagonal. Used in premium denim brands."},
+  {id:"D007",name:"Reclining twill denim (27°)",fabric_type:"Denim",weave_type:"Reclining Twill",twill_ratio:"3/1",direction:"Z",shaft_count:4,repeat_size:4,angle:27,float_length:"long",threading:"Straight",weight:"Medium",tags:["soft","flat-diagonal","comfort"],peg_matrix:[[1,0,1,1],[1,1,0,1],[0,1,1,1],[1,1,1,0]],popularity:55,description:"Flatter 27° twill angle, subtle diagonal texture, softer hand feel."},
+  {id:"D008",name:"1/3 weft-faced twill denim",fabric_type:"Denim",weave_type:"Twill",twill_ratio:"1/3",direction:"Z",shaft_count:4,repeat_size:4,angle:45,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["weft-faced","reverse","soft-back"],peg_matrix:[[0,0,0,1],[1,0,0,0],[0,1,0,0],[0,0,1,0]],popularity:60,description:"Weft-faced reverse of standard denim. Weft yarn shows more on face side."},
+  {id:"D009",name:"Zigzag twill denim",fabric_type:"Denim",weave_type:"Zigzag Twill",twill_ratio:"3/1",direction:"ZS zigzag",shaft_count:8,repeat_size:8,angle:45,float_length:"medium",threading:"Point",weight:"Heavy",tags:["fashion","zigzag","decorative","designer"],peg_matrix:[[1,1,1,0,1,1,1,0],[0,1,1,1,0,1,1,1],[1,0,1,1,1,0,1,1],[1,1,0,1,1,1,0,1],[1,1,1,0,1,1,1,0],[0,1,1,1,0,1,1,1],[1,0,1,1,1,0,1,1],[1,1,0,1,1,1,0,1]],popularity:58,description:"Zigzag pattern in denim by reversing twill direction at intervals."},
+  {id:"D010",name:"Elongated 4/1 twill denim",fabric_type:"Denim",weave_type:"Elongated Twill",twill_ratio:"4/1",direction:"Z",shaft_count:5,repeat_size:5,angle:45,float_length:"long",threading:"Straight",weight:"Heavy",tags:["luxury","soft","long-float","premium"],peg_matrix:[[1,1,1,1,0],[0,1,1,1,1],[1,0,1,1,1],[1,1,0,1,1],[1,1,1,0,1]],popularity:62,description:"Longer warp floats produce silkier surface. Used in comfort premium denim."},
+  {id:"D011",name:"2/2 matt twill denim",fabric_type:"Denim",weave_type:"Matt Twill",twill_ratio:"2/2",direction:"Z",shaft_count:4,repeat_size:4,angle:45,float_length:"medium",threading:"Straight",weight:"Medium",tags:["balanced","matt","two-tone"],peg_matrix:[[1,1,0,0],[0,1,1,0],[0,0,1,1],[1,0,0,1]],popularity:70,description:"Balanced 2/2 twill. Equal warp and weft visibility, good for two-tone denim effects."},
+  {id:"D012",name:"Dobby stripe denim",fabric_type:"Denim",weave_type:"Dobby",twill_ratio:"mixed",direction:"Z",shaft_count:12,repeat_size:12,angle:45,float_length:"variable",threading:"Straight",weight:"Heavy",tags:["dobby","stripe","fashion","texture"],peg_matrix:[[1,1,1,0,1,0],[0,1,1,1,0,1],[1,0,1,1,1,0],[1,1,0,1,1,1],[0,1,1,0,1,1],[1,0,1,1,0,1]],popularity:67,description:"Dobby-generated textured stripes on denim base. Adds visual interest to denim fabric."},
+  {id:"S001",name:"Plain weave shirting",fabric_type:"Shirting",weave_type:"Plain",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Light",tags:["plain","basic","formal","broadcloth"],peg_matrix:[[1,0],[0,1]],popularity:95,description:"Classic plain weave for formal shirts. Smooth, crisp surface."},
+  {id:"S002",name:"Oxford weave shirting",fabric_type:"Shirting",weave_type:"Oxford",twill_ratio:"basket",direction:"N/A",shaft_count:4,repeat_size:4,angle:90,float_length:"short",threading:"Straight",weight:"Medium",tags:["oxford","casual","textured","popular"],peg_matrix:[[1,1,0,0],[1,1,0,0],[0,0,1,1],[0,0,1,1]],popularity:92,description:"Classic Oxford basket weave. Casual shirts, button-downs."},
+  {id:"S003",name:"End-on-end shirting",fabric_type:"Shirting",weave_type:"End-on-End",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Alternating",weight:"Light",tags:["end-on-end","two-tone","elegant","subtle"],peg_matrix:[[1,0],[0,1]],popularity:80,description:"Alternating colored and white yarns in plain weave. Subtle two-tone effect."},
+  {id:"S004",name:"2/1 twill shirting",fabric_type:"Shirting",weave_type:"Twill",twill_ratio:"2/1",direction:"Z",shaft_count:3,repeat_size:3,angle:45,float_length:"short",threading:"Straight",weight:"Light",tags:["twill","drape","soft","casual"],peg_matrix:[[1,1,0],[0,1,1],[1,0,1]],popularity:78,description:"Soft twill shirting with good drape. Casual and semi-formal use."},
+  {id:"S005",name:"Pinpoint Oxford",fabric_type:"Shirting",weave_type:"Oxford",twill_ratio:"mixed",direction:"N/A",shaft_count:4,repeat_size:4,angle:90,float_length:"short",threading:"Straight",weight:"Light",tags:["pinpoint","fine","formal","premium"],peg_matrix:[[1,0,1,0],[0,1,0,1],[1,0,1,0],[0,1,0,1]],popularity:82,description:"Finer version of Oxford weave. Lighter and smoother for dress shirts."},
+  {id:"S006",name:"Satin shirting",fabric_type:"Shirting",weave_type:"Satin",twill_ratio:"4/1",direction:"Z",shaft_count:5,repeat_size:5,angle:45,float_length:"long",threading:"Skip",weight:"Light",tags:["satin","smooth","luxury","formal"],peg_matrix:[[1,0,0,0,0],[0,0,1,0,0],[0,0,0,0,1],[0,1,0,0,0],[0,0,0,1,0]],popularity:65,description:"Smooth satin weave shirting with lustrous surface."},
+  {id:"SU001",name:"Plain weave suiting",fabric_type:"Suiting",weave_type:"Plain",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Heavy",tags:["plain","formal","classic"],peg_matrix:[[1,0],[0,1]],popularity:75,description:"Basic plain weave suiting. Smooth, formal surface."},
+  {id:"SU002",name:"2/2 twill suiting",fabric_type:"Suiting",weave_type:"Twill",twill_ratio:"2/2",direction:"Z",shaft_count:4,repeat_size:4,angle:45,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["twill","classic","formal","drape"],peg_matrix:[[1,1,0,0],[0,1,1,0],[0,0,1,1],[1,0,0,1]],popularity:88,description:"Classic 2/2 twill suiting with excellent drape."},
+  {id:"SU003",name:"Herringbone suiting",fabric_type:"Suiting",weave_type:"Herringbone",twill_ratio:"2/2",direction:"ZS",shaft_count:8,repeat_size:8,angle:45,float_length:"medium",threading:"Point",weight:"Heavy",tags:["herringbone","classic","formal","premium"],peg_matrix:[[1,1,0,0,0,0,1,1],[1,0,0,1,1,0,0,1],[0,0,1,1,1,1,0,0],[0,1,1,0,0,1,1,0],[0,0,1,1,1,1,0,0],[0,1,1,0,0,1,1,0],[1,1,0,0,0,0,1,1],[1,0,0,1,1,0,0,1]],popularity:90,description:"Classic herringbone suiting. Timeless formal and business suit fabric."},
+  {id:"SU004",name:"Houndstooth suiting",fabric_type:"Suiting",weave_type:"Houndstooth",twill_ratio:"2/2",direction:"ZS",shaft_count:8,repeat_size:8,angle:45,float_length:"medium",threading:"Point",weight:"Heavy",tags:["houndstooth","classic","fashion","check"],peg_matrix:[[1,1,1,0,1,1,1,0],[1,1,0,0,1,1,0,0],[1,0,0,0,1,0,0,0],[0,0,0,1,0,0,0,1],[0,1,1,1,0,1,1,1],[0,1,1,1,0,1,1,1],[0,0,1,1,0,0,1,1],[0,0,0,1,0,0,0,1]],popularity:82,description:"Classic houndstooth check suiting. Iconic fashion and formal pattern."},
+  {id:"SU005",name:"Sharkskin suiting",fabric_type:"Suiting",weave_type:"Twill",twill_ratio:"2/2",direction:"ZS alternating",shaft_count:4,repeat_size:4,angle:45,float_length:"medium",threading:"Straight",weight:"Medium",tags:["sharkskin","sheen","formal","1950s"],peg_matrix:[[1,1,0,0],[1,0,0,1],[0,0,1,1],[0,1,1,0]],popularity:70,description:"Sharkskin effect suiting with subtle sheen and texture."},
+  {id:"C001",name:"Plain canvas",fabric_type:"Canvas/Duck",weave_type:"Plain",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Extra Heavy",tags:["plain","heavy-duty","workwear","bags"],peg_matrix:[[1,0],[0,1]],popularity:95,description:"Standard plain weave canvas. Bags, tarpaulins, workwear."},
+  {id:"C002",name:"2/2 basket duck",fabric_type:"Canvas/Duck",weave_type:"Basket",twill_ratio:"2/2",direction:"N/A",shaft_count:4,repeat_size:4,angle:90,float_length:"medium",threading:"Straight",weight:"Extra Heavy",tags:["basket","heavy","industrial","upholstery"],peg_matrix:[[1,1,0,0],[1,1,0,0],[0,0,1,1],[0,0,1,1]],popularity:88,description:"2/2 basket duck weave for heavy upholstery and industrial use."},
+  {id:"C003",name:"3/1 twill canvas",fabric_type:"Canvas/Duck",weave_type:"Twill",twill_ratio:"3/1",direction:"Z",shaft_count:4,repeat_size:4,angle:45,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["twill","workwear","durable"],peg_matrix:[[1,1,1,0],[0,1,1,1],[1,0,1,1],[1,1,0,1]],popularity:80,description:"Twill canvas for workwear and heavy-duty applications."},
+  {id:"C004",name:"4/4 basket heavy duck",fabric_type:"Canvas/Duck",weave_type:"Basket",twill_ratio:"4/4",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"long",threading:"Straight",weight:"Extra Heavy",tags:["heavy","industrial","sacking"],peg_matrix:[[1,1,1,1,0,0,0,0],[1,1,1,1,0,0,0,0],[1,1,1,1,0,0,0,0],[1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,1],[0,0,0,0,1,1,1,1],[0,0,0,0,1,1,1,1],[0,0,0,0,1,1,1,1]],popularity:72,description:"Heavy 4x4 basket weave duck for industrial and marine applications."},
+  {id:"P001",name:"Classic poplin",fabric_type:"Poplin/Lawn",weave_type:"Rib",twill_ratio:"rib",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Light",tags:["poplin","crisp","formal","shirts"],peg_matrix:[[1,0],[0,1]],popularity:95,description:"Classic poplin with fine warp rib. Crisp formal shirting."},
+  {id:"P002",name:"Fine lawn",fabric_type:"Poplin/Lawn",weave_type:"Plain",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Ultra Light",tags:["lawn","sheer","fine","summer"],peg_matrix:[[1,0],[0,1]],popularity:88,description:"Ultra fine plain weave lawn fabric for summer and luxury shirting."},
+  {id:"P003",name:"Dobby poplin",fabric_type:"Poplin/Lawn",weave_type:"Dobby",twill_ratio:"mixed",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"variable",threading:"Straight",weight:"Light",tags:["dobby","texture","fashion","poplin"],peg_matrix:[[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[1,1,0,0,1,1,0,0],[0,0,1,1,0,0,1,1],[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[0,0,1,1,0,0,1,1],[1,1,0,0,1,1,0,0]],popularity:78,description:"Dobby textured poplin for fashion shirts and blouses."},
+  {id:"TW001",name:"Plain tweed",fabric_type:"Tweed",weave_type:"Plain",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Extra Heavy",tags:["plain","rustic","classic","Harris"],peg_matrix:[[1,0],[0,1]],popularity:85,description:"Classic plain weave tweed. Base for Harris Tweed and country fabrics."},
+  {id:"TW002",name:"2/2 herringbone tweed",fabric_type:"Tweed",weave_type:"Herringbone",twill_ratio:"2/2",direction:"ZS",shaft_count:8,repeat_size:8,angle:45,float_length:"medium",threading:"Point",weight:"Extra Heavy",tags:["herringbone","classic","country","premium"],peg_matrix:[[1,1,0,0,0,0,1,1],[1,0,0,1,1,0,0,1],[0,0,1,1,1,1,0,0],[0,1,1,0,0,1,1,0],[0,0,1,1,1,1,0,0],[0,1,1,0,0,1,1,0],[1,1,0,0,0,0,1,1],[1,0,0,1,1,0,0,1]],popularity:90,description:"Classic herringbone tweed for jackets and coats."},
+  {id:"TW003",name:"Houndstooth tweed",fabric_type:"Tweed",weave_type:"Houndstooth",twill_ratio:"2/2",direction:"ZS",shaft_count:8,repeat_size:8,angle:45,float_length:"medium",threading:"Point",weight:"Extra Heavy",tags:["houndstooth","check","classic","fashion"],peg_matrix:[[1,1,1,0,1,1,1,0],[1,1,0,0,1,1,0,0],[1,0,0,0,1,0,0,0],[0,0,0,1,0,0,0,1],[0,1,1,1,0,1,1,1],[0,1,1,1,0,1,1,1],[0,0,1,1,0,0,1,1],[0,0,0,1,0,0,0,1]],popularity:82,description:"Houndstooth check tweed for classic fashion and country wear."},
+  {id:"TW004",name:"Donegal tweed",fabric_type:"Tweed",weave_type:"Plain with slubs",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Extra Heavy",tags:["donegal","slub","rustic","Irish"],peg_matrix:[[1,0],[0,1]],popularity:78,description:"Donegal-style tweed with slub yarn for rustic texture."},
+  {id:"CR001",name:"Standard corduroy (8 wale)",fabric_type:"Corduroy",weave_type:"Pile",twill_ratio:"plain ground",direction:"N/A",shaft_count:4,repeat_size:8,angle:90,float_length:"long",threading:"Straight",weight:"Heavy",tags:["corduroy","8-wale","standard","casual"],peg_matrix:[[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[1,1,1,1,1,1,1,1],[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[1,1,1,1,1,1,1,1],[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1]],popularity:90,description:"Standard 8-wale corduroy. Classic casual trousers and jackets."},
+  {id:"CR002",name:"Fine wale corduroy (14 wale)",fabric_type:"Corduroy",weave_type:"Pile",twill_ratio:"plain ground",direction:"N/A",shaft_count:4,repeat_size:4,angle:90,float_length:"medium",threading:"Straight",weight:"Medium",tags:["fine-wale","14-wale","formal","lightweight"],peg_matrix:[[1,0,1,0],[0,1,0,1],[1,1,1,1],[1,0,1,0]],popularity:82,description:"Fine 14-wale corduroy for formal and lightweight applications."},
+  {id:"CR003",name:"Wide wale corduroy (4 wale)",fabric_type:"Corduroy",weave_type:"Pile",twill_ratio:"plain ground",direction:"N/A",shaft_count:4,repeat_size:4,angle:90,float_length:"long",threading:"Straight",weight:"Extra Heavy",tags:["wide-wale","4-wale","casual","bold"],peg_matrix:[[1,0,1,0],[0,1,0,1],[1,1,1,1],[1,0,1,0]],popularity:78,description:"Bold wide 4-wale corduroy for casual outerwear."},
+  {id:"CR004",name:"Bedford cord",fabric_type:"Corduroy",weave_type:"Bedford",twill_ratio:"rib+plain",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"medium",threading:"Straight",weight:"Heavy",tags:["bedford","rib","equestrian","trousers"],peg_matrix:[[1,1,0,0,1,1,0,0],[0,0,1,1,0,0,1,1],[1,0,0,1,1,0,0,1],[0,1,1,0,0,1,1,0],[1,1,0,0,1,1,0,0],[0,0,1,1,0,0,1,1],[1,0,0,1,1,0,0,1],[0,1,1,0,0,1,1,0]],popularity:72,description:"Bedford cord for equestrian and heavy trousers."},
+  {id:"CP001",name:"Granite crepe",fabric_type:"Crepe",weave_type:"Crepe",twill_ratio:"complex",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"variable",threading:"Broken",weight:"Light",tags:["crepe","granite","pebble-texture","dress"],peg_matrix:[[1,0,0,1,0,1,1,0],[0,1,1,0,1,0,0,1],[1,0,1,0,0,1,0,1],[0,1,0,1,1,0,1,0],[0,1,0,1,0,1,0,1],[1,0,1,0,1,0,1,0],[0,0,1,1,0,0,1,1],[1,1,0,0,1,1,0,0]],popularity:80,description:"Granite crepe with even pebble texture. Classic dress fabric."},
+  {id:"CP002",name:"Georgette crepe",fabric_type:"Crepe",weave_type:"Plain Crepe",twill_ratio:"1/1",direction:"N/A",shaft_count:2,repeat_size:2,angle:90,float_length:"short",threading:"Straight",weight:"Ultra Light",tags:["georgette","sheer","drape","luxury"],peg_matrix:[[1,0],[0,1]],popularity:85,description:"Sheer georgette plain weave crepe. High-twist yarns create texture."},
+  {id:"CP003",name:"Satin-back crepe",fabric_type:"Crepe",weave_type:"Crepe+Satin",twill_ratio:"complex",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"variable",threading:"Skip",weight:"Medium",tags:["satin-back","reversible","luxury","dress"],peg_matrix:[[1,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,1,0,0,0,0,0],[0,0,0,0,0,0,1,0],[0,1,0,0,0,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,1]],popularity:78,description:"Reversible fabric — crepe on face, satin on back. Luxury dress fabric."},
+  {id:"DF001",name:"Diamond dobby",fabric_type:"Dobby Fancy/Fashion",weave_type:"Dobby",twill_ratio:"complex",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"variable",threading:"Point",weight:"Medium",tags:["diamond","dobby","fashion","texture"],peg_matrix:[[0,0,0,1,0,0,0,1],[0,0,1,1,1,0,0,0],[0,1,1,0,1,1,0,0],[1,1,0,0,0,1,1,0],[1,0,0,0,0,0,1,0],[1,1,0,0,0,1,1,0],[0,1,1,0,1,1,0,0],[0,0,1,1,1,0,0,0]],popularity:85,description:"Classic diamond motif dobby for fashion fabrics."},
+  {id:"DF002",name:"Honeycomb dobby",fabric_type:"Dobby Fancy/Fashion",weave_type:"Honeycomb",twill_ratio:"complex",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"long",threading:"Point",weight:"Medium",tags:["honeycomb","dobby","textured","towel-like"],peg_matrix:[[1,1,1,1,0,0,0,0],[1,0,0,1,0,1,1,0],[1,0,0,1,0,1,1,0],[1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,1],[0,1,1,0,1,0,0,1],[0,1,1,0,1,0,0,1],[0,0,0,0,1,1,1,1]],popularity:80,description:"Honeycomb dobby creates cellular texture for towels and fashion."},
+  {id:"DF003",name:"Spot dobby",fabric_type:"Dobby Fancy/Fashion",weave_type:"Dobby",twill_ratio:"plain+float",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"variable",threading:"Straight",weight:"Light",tags:["spot","dobby","dotted","fashion"],peg_matrix:[[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[1,0,0,0,1,0,0,0],[0,1,0,0,0,1,0,0],[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[0,0,1,0,0,0,1,0],[0,0,0,1,0,0,0,1]],popularity:78,description:"Spot/dot dobby pattern on plain ground for fashion shirting."},
+  {id:"DF004",name:"Waffle dobby",fabric_type:"Dobby Fancy/Fashion",weave_type:"Waffle",twill_ratio:"complex",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"variable",threading:"Point",weight:"Medium",tags:["waffle","texture","dobby","casual"],peg_matrix:[[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[1,0,0,0,1,0,0,0],[0,0,0,1,0,0,0,1],[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[0,0,1,0,0,0,1,0],[0,1,0,0,0,1,0,0]],popularity:75,description:"Waffle dobby texture for towels, casual wear and home textiles."},
+  {id:"DF005",name:"Bird's eye dobby",fabric_type:"Dobby Fancy/Fashion",weave_type:"Dobby",twill_ratio:"mixed",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"short",threading:"Broken",weight:"Light",tags:["birds-eye","fashion","subtle","texture"],peg_matrix:[[1,0,0,0,1,0,0,0],[0,0,1,0,0,0,1,0],[0,1,0,0,0,1,0,0],[0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0],[0,0,1,0,0,0,1,0],[0,1,0,0,0,1,0,0],[0,0,0,1,0,0,0,1]],popularity:74,description:"Subtle bird's eye texture for fashion fabric."},
+  {id:"DF006",name:"Tuck dobby",fabric_type:"Dobby Fancy/Fashion",weave_type:"Tuck/Dobby",twill_ratio:"complex",direction:"N/A",shaft_count:8,repeat_size:8,angle:90,float_length:"long",threading:"Straight",weight:"Medium",tags:["tuck","3D","puffed","fashion"],peg_matrix:[[1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,1],[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[1,1,0,0,1,1,0,0],[0,0,1,1,0,0,1,1],[1,0,0,1,1,0,0,1],[0,1,1,0,0,1,1,0]],popularity:73,description:"Tuck dobby creates 3D puffed texture for fashion apparel."}
+];
+
+const fabricTypes = [...new Set(DB.map(d=>d.fabric_type))];
+const weaveTypes = [...new Set(DB.map(d=>d.weave_type))];
+
+let activeFabrics = new Set();
+let activeWeaves = new Set();
+let shaftRange = '';
+let weightFilter = '';
+let sortBy = 'popularity';
+let searchQ = '';
+let selectedDesign = null;
+
+function buildSidebar(){
+  const ff = document.getElementById('fabric-filters');
+  fabricTypes.forEach(f=>{
+    const cnt = DB.filter(d=>d.fabric_type===f).length;
+    const col = fabricColors[f];
+    ff.innerHTML += `<label class="filter-option"><input type="checkbox" onchange="toggleFabric('${f}')" /> <span>${f}</span><span class="cnt">${cnt}</span></label>`;
+  });
+  const wf = document.getElementById('weave-filters');
+  const topWeaves = [...new Set(DB.map(d=>d.weave_type))].slice(0,8);
+  topWeaves.forEach(w=>{
+    const cnt = DB.filter(d=>d.weave_type===w).length;
+    wf.innerHTML += `<label class="filter-option"><input type="checkbox" onchange="toggleWeave('${w}')" /> <span>${w}</span><span class="cnt">${cnt}</span></label>`;
+  });
+  document.getElementById('shaft-select').onchange=e=>{shaftRange=e.target.value;render()};
+  document.getElementById('weight-select').onchange=e=>{weightFilter=e.target.value;render()};
+  document.getElementById('sort-select').onchange=e=>{sortBy=e.target.value;render()};
+  document.getElementById('search').oninput=e=>{searchQ=e.target.value.toLowerCase();render()};
+}
+
+function toggleFabric(f){
+  if(activeFabrics.has(f))activeFabrics.delete(f);else activeFabrics.add(f);render();
+}
+function toggleWeave(w){
+  if(activeWeaves.has(w))activeWeaves.delete(w);else activeWeaves.add(w);render();
+}
+function clearFilters(){
+  activeFabrics.clear();activeWeaves.clear();shaftRange='';weightFilter='';searchQ='';sortBy='popularity';
+  document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
+  document.getElementById('shaft-select').value='';
+  document.getElementById('weight-select').value='';
+  document.getElementById('sort-select').value='popularity';
+  document.getElementById('search').value='';
+  render();
+}
+
+function shaftInRange(n){
+  if(!shaftRange)return true;
+  const[a,b]=shaftRange.split('-').map(Number);
+  return n>=a&&n<=b;
+}
+
+function getFiltered(){
+  let data=[...DB];
+  if(activeFabrics.size)data=data.filter(d=>activeFabrics.has(d.fabric_type));
+  if(activeWeaves.size)data=data.filter(d=>activeWeaves.has(d.weave_type));
+  if(shaftRange)data=data.filter(d=>shaftInRange(d.shaft_count));
+  if(weightFilter)data=data.filter(d=>d.weight===weightFilter);
+  if(searchQ)data=data.filter(d=>
+    d.name.toLowerCase().includes(searchQ)||
+    d.fabric_type.toLowerCase().includes(searchQ)||
+    d.weave_type.toLowerCase().includes(searchQ)||
+    (d.twill_ratio+'').toLowerCase().includes(searchQ)||
+    d.tags.some(t=>t.includes(searchQ))
+  );
+  if(sortBy==='popularity')data.sort((a,b)=>b.popularity-a.popularity);
+  else if(sortBy==='name')data.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sortBy==='shaft_asc')data.sort((a,b)=>a.shaft_count-b.shaft_count);
+  else if(sortBy==='shaft_desc')data.sort((a,b)=>b.shaft_count-a.shaft_count);
+  return data;
+}
+
+function drawPeg(matrix){
+  const canvas=document.createElement('canvas');
+  const rows=matrix.length, cols=matrix[0].length;
+  const cell=Math.min(Math.floor(80/cols),Math.floor(80/rows));
+  canvas.width=cols*cell; canvas.height=rows*cell;
+  canvas.style.width='100%'; canvas.style.height='auto';
+  const ctx=canvas.getContext('2d');
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      ctx.fillStyle=matrix[r][c]?'#1a3a6b':'#e5e7eb';
+      ctx.fillRect(c*cell,r*cell,cell,cell);
+      ctx.strokeStyle='#fff';ctx.lineWidth=0.5;
+      ctx.strokeRect(c*cell,r*cell,cell,cell);
+    }
+  }
+  return canvas;
+}
+
+function render(){
+  const data=getFiltered();
+  document.getElementById('count-badge').textContent=data.length+' designs';
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  if(!data.length){
+    grid.innerHTML='<div class="no-results" style="grid-column:1/-1">No designs match your filters.</div>';
+    return;
+  }
+  data.forEach(d=>{
+    const col=fabricColors[d.fabric_type]||{bg:'#f3f4f6',text:'#374151'};
+    const div=document.createElement('div');
+    div.className='card';
+    div.onclick=()=>openModal(d);
+    div.innerHTML=`
+      <div class="card-top">
+        <span class="fabric-badge" style="background:${col.bg};color:${col.text}">${d.fabric_type}</span>
+        <span style="font-size:10px;color:var(--color-text-tertiary)">${d.shaft_count}sh</span>
+      </div>
+      <div class="card-name">${d.name}</div>
+      <div class="card-sub">${d.weave_type} · ${d.twill_ratio} · ${d.weight}</div>
+      <div class="pop-bar-wrap">
+        <div class="pop-bar-bg"><div class="pop-bar" style="width:${d.popularity}%"></div></div>
+        <span class="pop-val">${d.popularity}</span>
+      </div>
+    `;
+    const peg=drawPeg(d.peg_matrix);
+    peg.className='peg-canvas';
+    div.appendChild(peg);
+    const tags=document.createElement('div');
+    tags.className='tags';
+    d.tags.slice(0,3).forEach(t=>{
+      tags.innerHTML+=`<span class="tag">${t}</span>`;
+    });
+    div.appendChild(tags);
+    grid.appendChild(div);
+  });
+}
+
+function openModal(d){
+  selectedDesign=d;
+  const existing=document.getElementById('modal-overlay');
+  if(existing)existing.remove();
+  const col=fabricColors[d.fabric_type]||{bg:'#f3f4f6',text:'#374151'};
+  const overlay=document.createElement('div');
+  overlay.className='modal-bg';
+  overlay.id='modal-overlay';
+  overlay.style.position='fixed';
+  overlay.style.top='0';overlay.style.left='0';overlay.style.right='0';overlay.style.bottom='0';
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
+  const modal=document.createElement('div');
+  modal.className='modal';
+  modal.innerHTML=`
+    <div class="modal-header">
+      <div>
+        <span class="fabric-badge" style="background:${col.bg};color:${col.text};display:inline-block;margin-bottom:6px">${d.fabric_type}</span>
+        <div class="modal-title">${d.name}</div>
+      </div>
+      <button class="close-btn" onclick="document.getElementById('modal-overlay').remove()">×</button>
+    </div>
+    <div class="modal-desc">${d.description}</div>
+    <div class="modal-grid">
+      <div class="modal-field"><div class="modal-label">Weave type</div><div class="modal-val">${d.weave_type}</div></div>
+      <div class="modal-field"><div class="modal-label">Ratio</div><div class="modal-val">${d.twill_ratio}</div></div>
+      <div class="modal-field"><div class="modal-label">Shafts</div><div class="modal-val">${d.shaft_count}</div></div>
+      <div class="modal-field"><div class="modal-label">Repeat</div><div class="modal-val">${d.repeat_size}×${d.repeat_size}</div></div>
+      <div class="modal-field"><div class="modal-label">Angle</div><div class="modal-val">${d.angle}°</div></div>
+      <div class="modal-field"><div class="modal-label">Threading</div><div class="modal-val">${d.threading}</div></div>
+      <div class="modal-field"><div class="modal-label">Weight</div><div class="modal-val">${d.weight}</div></div>
+      <div class="modal-field"><div class="modal-label">Float</div><div class="modal-val">${d.float_length}</div></div>
+      <div class="modal-field"><div class="modal-label">Direction</div><div class="modal-val">${d.direction}</div></div>
+      <div class="modal-field"><div class="modal-label">Popularity</div><div class="modal-val">${d.popularity}/100</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:500">Peg plan matrix (${d.repeat_size}×${d.peg_matrix[0].length})</div>
+  `;
+  const pegWrap=document.createElement('div');
+  pegWrap.className='modal-peg';
+  const bigCanvas=drawPegLarge(d.peg_matrix);
+  pegWrap.appendChild(bigCanvas);
+  modal.appendChild(pegWrap);
+  const tagsDiv=document.createElement('div');
+  tagsDiv.className='tags';
+  d.tags.forEach(t=>tagsDiv.innerHTML+=`<span class="tag">${t}</span>`);
+  modal.appendChild(tagsDiv);
+  overlay.appendChild(modal);
+  document.getElementById('root').appendChild(overlay);
+}
+
+function drawPegLarge(matrix){
+  const canvas=document.createElement('canvas');
+  const rows=matrix.length, cols=matrix[0].length;
+  const cell=24;
+  canvas.width=cols*cell; canvas.height=rows*cell;
+  canvas.style.width=(cols*cell)+'px'; canvas.style.height=(rows*cell)+'px';
+  canvas.style.maxWidth='100%';
+  const ctx=canvas.getContext('2d');
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      ctx.fillStyle=matrix[r][c]?'#1a3a6b':'#e5e7eb';
+      ctx.fillRect(c*cell,r*cell,cell,cell);
+      ctx.strokeStyle='#fff';ctx.lineWidth=1;
+      ctx.strokeRect(c*cell,r*cell,cell,cell);
+      if(matrix[r][c]){
+        ctx.fillStyle='#6b9bd2';
+        ctx.font='8px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('▲',c*cell+cell/2,r*cell+cell/2);
+      }
+    }
+  }
+  return canvas;
+}
+
+buildSidebar();
+render();
+</script>

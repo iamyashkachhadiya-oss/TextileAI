@@ -14,7 +14,7 @@ const COLOR_MAP: Record<string, string> = {
   'lavender': '#B388FF', 'rose': '#E8909C',
 }
 
-function resolveColor(code: string, fallback: string): string {
+function resolveColor(code: string | undefined, fallback: string): string {
   if (!code) return fallback
   if (code.startsWith('#')) return code
   const lower = code.toLowerCase().trim()
@@ -30,10 +30,11 @@ interface SimulationPreviewProps {
 
 export default function SimulationPreview({ matrix, warpColor, weftColor, designName }: SimulationPreviewProps) {
   const previewRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [rendered, setRendered] = useState(false)
 
-  const warpHex = resolveColor(warpColor, '#1D1D1F')
-  const weftHex = resolveColor(weftColor, '#007AFF')
+  const warpHex = resolveColor(warpColor, '#1B3A6B')
+  const weftHex = resolveColor(weftColor, '#E8A838')
 
   const renderSimulation = useCallback((canvas: HTMLCanvasElement, canvasSize: number) => {
     const rows = matrix.length
@@ -153,7 +154,7 @@ export default function SimulationPreview({ matrix, warpColor, weftColor, design
   }
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%' }} ref={containerRef}>
       {/* Preview */}
       <div className="flex justify-center mb-4">
         <div style={{

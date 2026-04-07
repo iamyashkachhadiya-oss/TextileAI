@@ -9,7 +9,8 @@ import WeftForm from '@/components/design/WeftForm'
 import LoomForm from '@/components/design/LoomForm'
 import CalcPanel from '@/components/design/CalcPanel'
 import PegPlanEditor from '@/components/design/PegPlanEditor'
-import SimulationPreview from '@/components/outputs/SimulationExport'
+import SimulationExport from '@/components/outputs/SimulationExport'
+import DesignLibrary from '@/components/design/DesignLibrary'
 import BorderForm from '@/components/design/BorderForm'
 import MachineExportPanel from '@/components/outputs/MachineExport'
 import SimulationAssistantUI from '@/components/analysis/SimulationAssistant'
@@ -27,6 +28,7 @@ const NAV_TABS: { id: DemoTab; label: string; icon: string }[] = [
 
 export default function DemoPage() {
   const [activeTab, setActiveTab] = useState<DemoTab>('Weft')
+  const [centerMode, setCenterMode] = useState<'predefined' | 'design-library' | 'draft-to-peg' | 'peg-to-draft'>('predefined')
   const [initialized, setInitialized] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const store = useDesignStore()
@@ -85,31 +87,26 @@ export default function DemoPage() {
             ☰
           </button>
 
-          {/* Logo mark */}
-          <div style={{
-            width: 30, height: 30, borderRadius: 8,
-            background: 'linear-gradient(145deg, #1D1D1F 0%, #3a3a3c 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <span style={{ color: '#007AFF', fontSize: 15, fontWeight: 700, lineHeight: 1 }}>ƒ</span>
-          </div>
-
-          {/* Brand */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-              <span style={{
-                fontSize: 15, fontWeight: 700,
-                color: 'var(--text-1)', letterSpacing: '-0.03em',
-              }}>FabricAI</span>
-              <span style={{
-                fontSize: 10, fontWeight: 600,
-                color: 'var(--text-3)', letterSpacing: '0.08em',
+          {/* Logo mark — matches PDF wordmark exactly */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Wordmark — same style as PDF brand-wordmark */}
+            <div>
+              <div style={{
+                fontSize: 17, fontWeight: 800,
+                letterSpacing: '-0.04em', lineHeight: 1.1,
+                color: '#1D1D1F',
+              }}>
+                Fabric<span style={{ color: '#007AFF' }}>AI</span> Studio
+              </div>
+              <div style={{
+                fontSize: 8, fontWeight: 600,
+                color: '#8E8E93',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-              }}>Studio</span>
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -1, letterSpacing: '-0.01em' }}>
-              {store.identity.design_name || 'Untitled'} · {store.identity.design_number || 'No ID'}
+                marginTop: 2,
+              }}>
+                Industrial Textile Engineering
+              </div>
             </div>
           </div>
         </div>
@@ -234,6 +231,177 @@ export default function DemoPage() {
         <div className="flex-1 min-w-0" style={{ overflowY: 'auto', overflowX: 'hidden', padding: '20px 18px' }}>
           <div className="flex flex-col gap-4 w-full min-h-full">
 
+            {/* ── Apple HIG Segmented Control ── */}
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 4, paddingBottom: 8 }}>
+              {/* Outer frosted capsule — matches macOS Ventura control chrome */}
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                padding: '3px',
+                background: 'rgba(118,118,128,0.12)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                borderRadius: 11,
+                border: '0.5px solid rgba(0,0,0,0.07)',
+              }}>
+                {([
+                  {
+                    id: 'predefined' as const,
+                    label: 'Predefined',
+                    svg: (
+                      // Weave grid — 3×3 alternating filled squares
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1" y="1" width="4" height="4" rx="0.8" fill="currentColor"/>
+                        <rect x="1" y="10" width="4" height="4" rx="0.8" fill="currentColor"/>
+                        <rect x="10" y="1" width="4" height="4" rx="0.8" fill="currentColor"/>
+                        <rect x="10" y="10" width="4" height="4" rx="0.8" fill="currentColor"/>
+                        <rect x="5.5" y="5.5" width="4" height="4" rx="0.8" fill="currentColor" opacity="0.4"/>
+                        <rect x="1" y="5.5" width="4" height="4" rx="0.8" fill="currentColor" opacity="0.2"/>
+                        <rect x="10" y="5.5" width="4" height="4" rx="0.8" fill="currentColor" opacity="0.2"/>
+                        <rect x="5.5" y="1" width="4" height="4" rx="0.8" fill="currentColor" opacity="0.2"/>
+                        <rect x="5.5" y="10" width="4" height="4" rx="0.8" fill="currentColor" opacity="0.2"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: 'design-library' as const,
+                    label: 'Design Library',
+                    svg: (
+                      // Stacked layers / library shelves
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1" y="2" width="13" height="2.8" rx="1.2" fill="currentColor"/>
+                        <rect x="1" y="6.1" width="13" height="2.8" rx="1.2" fill="currentColor" opacity="0.6"/>
+                        <rect x="1" y="10.2" width="13" height="2.8" rx="1.2" fill="currentColor" opacity="0.3"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: 'draft-to-peg' as const,
+                    label: 'Draft → Peg',
+                    svg: (
+                      // Two rows collapsing into one — Draft → Peg compression
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1" y="1.5" width="5.5" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                        <rect x="8.5" y="1.5" width="5.5" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                        <path d="M4 3.5 L7.5 7.5 L11 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        <rect x="3" y="11.5" width="9" height="2" rx="1" fill="currentColor"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: 'peg-to-draft' as const,
+                    label: 'Peg → Draft',
+                    svg: (
+                      // One row expanding into two — Peg → Draft expansion
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="1.5" width="9" height="2" rx="1" fill="currentColor"/>
+                        <path d="M4 7.5 L7.5 3.5 L11 7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        <rect x="1" y="11.5" width="5.5" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                        <rect x="8.5" y="11.5" width="5.5" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                      </svg>
+                    ),
+                  },
+                ] as const).map(({ id, label, svg }) => {
+                  const active = centerMode === id
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setCenterMode(id)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '6px 16px',
+                        fontSize: 13,
+                        fontWeight: active ? 600 : 400,
+                        letterSpacing: '-0.015em',
+                        color: active ? 'var(--text-1)' : 'var(--text-3)',
+                        background: active ? '#ffffff' : 'transparent',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease',
+                        boxShadow: active
+                          ? '0 1px 5px rgba(0,0,0,0.14), 0 0.5px 1.5px rgba(0,0,0,0.10), inset 0 0.5px 0 rgba(255,255,255,1)'
+                          : 'none',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif',
+                        userSelect: 'none' as const,
+                      }}
+                    >
+                      {/* SVG icon */}
+                      <span style={{
+                        lineHeight: 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        opacity: active ? 1 : 0.5,
+                        transition: 'opacity 0.18s ease',
+                        color: active ? '#007AFF' : 'var(--text-3)',
+                      }}>
+                        {svg}
+                      </span>
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* ── PLACEHOLDER PANELS ── */}
+            {centerMode === 'draft-to-peg' && (
+              <div style={{
+                flex: 1, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 16, padding: '60px 24px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border-light)',
+                borderRadius: 16, boxShadow: 'var(--shadow-xs)',
+              }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 16,
+                  background: 'linear-gradient(145deg, #007AFF22, #007AFF44)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 26,
+                }}>
+                  ↓
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-1)', letterSpacing: '-0.02em' }}>Draft → Peg</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 6, maxWidth: 320, lineHeight: 1.5 }}>
+                    Convert a threading draft into a peg plan automatically. Coming soon.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {centerMode === 'peg-to-draft' && (
+              <div style={{
+                flex: 1, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 16, padding: '60px 24px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border-light)',
+                borderRadius: 16, boxShadow: 'var(--shadow-xs)',
+              }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 16,
+                  background: 'linear-gradient(145deg, #34C75922, #34C75944)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 26,
+                }}>
+                  ↑
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-1)', letterSpacing: '-0.02em' }}>Peg → Draft</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 6, maxWidth: 320, lineHeight: 1.5 }}>
+                    Reverse-engineer a threading draft from an existing peg plan. Coming soon.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {centerMode === 'predefined' && <>
             {/* ── 1. PEG PLAN EDITOR ── */}
             <div className="card">
               <div style={{ marginBottom: 14 }}>
@@ -329,10 +497,19 @@ export default function DemoPage() {
                   Real-time weave structure preview
                 </div>
               </div>
-              <SimulationPreview
+              <SimulationExport
                 matrix={store.weaveMatrix.length > 0 ? store.weaveMatrix : store.pegPlanMatrix}
-                warpColor={store.warp?.colour_hex || '#1D1D1F'}
-                weftColor={store.weftSystem.yarns[0]?.colour_hex || '#007AFF'}
+                warpColor={
+                  store.warpSystem.yarns[0]?.colour_hex ||
+                  store.warp?.colour_hex ||
+                  store.warp?.colour_code ||
+                  '#1B3A6B'
+                }
+                weftColor={
+                  store.weftSystem.yarns[0]?.colour_hex ||
+                  store.weftSystem.yarns[0]?.colour_code ||
+                  '#E8A838'
+                }
                 designName={store.identity.design_name || 'Design'}
               />
             </div>
@@ -400,6 +577,27 @@ export default function DemoPage() {
             }}>
               <CalcPanel />
             </div>
+            </> /* end predefined */}
+
+            {centerMode === 'design-library' && (
+              <DesignLibrary />
+            )}
+
+            {centerMode === 'draft-to-peg' && (
+              <div className="card text-center" style={{ padding: '60px 20px', color: 'var(--text-3)' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>↓</div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-1)', marginBottom: 8 }}>Draft to Peg Conversion</h3>
+                <p style={{ fontSize: 13 }}>Mathematical conversion engine in development.</p>
+              </div>
+            )}
+
+            {centerMode === 'peg-to-draft' && (
+              <div className="card text-center" style={{ padding: '60px 20px', color: 'var(--text-3)' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>↑</div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-1)', marginBottom: 8 }}>Peg to Draft Conversion</h3>
+                <p style={{ fontSize: 13 }}>Mathematical conversion engine in development.</p>
+              </div>
+            )}
           </div>
         </div>
 
