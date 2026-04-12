@@ -6,6 +6,9 @@ export async function downloadPDF() {
   const state = useDesignStore.getState()
   const { identity, warp, weftSystem, loom, calcOutputs } = state
   const draftSeq: number[] = state.draftSequence   // threading draft: end→shaft
+  const borderShaftsUsed = state.borderShaftsUsed
+  const borderEnds       = state.borderEnds
+  const shaftCount       = state.shaftCount
 
   // ── Resolve thread colors first (before any SVG generation) ──────────
   const COLOR_MAP: Record<string, string> = {
@@ -305,7 +308,7 @@ export async function downloadPDF() {
     ${[
       ['GSM', calcOutputs.gsm.toFixed(1), '#FF9500'],
       ['Linear Wt', `${calcOutputs.linear_meter_weight_g.toFixed(1)} g/m`, '#007AFF'],
-      ['Total Ends', calcOutputs.total_warp_ends.toLocaleString(), '#34C759'],
+      ['Total Ends', (calcOutputs.total_warp_ends + borderEnds).toLocaleString() + (borderEnds > 0 ? ` (${borderEnds}B+${calcOutputs.total_warp_ends}Bd)` : ''), '#34C759'],
       ['Production', `${calcOutputs.production_m_per_hr.toFixed(2)} m/hr`, '#AF52DE'],
       ['Cost/m', `$${calcOutputs.cost_per_meter.toFixed(2)}`, '#FF9500'],
     ].map(([lbl, val, col]) =>
@@ -398,12 +401,115 @@ export async function downloadPDF() {
 
   <div class="page-footer">
     <span>FabricAI Studio — Solerix Technologies</span>
-    <span>${identity.design_number || 'Draft'} · Page 2 of 3</span>
+    <span>${identity.design_number || 'Draft'} · Page 2 of 4</span>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
-     PAGE 3 — Fabric Simulation (matches website SimulationPanel)
+     PAGE 3 — Border Design (shaft budget + warp layout)
+═══════════════════════════════════════════════════════ -->
+${borderShaftsUsed > 0 ? `
+<div class="page">
+  <div class="brand-header">
+    <div>
+      <div class="brand-wordmark">Fabric<span>AI</span> Studio</div>
+      <div class="brand-tagline">Border Design Report</div>
+    </div>
+    <div class="doc-meta">
+      <strong>${identity.design_name || '—'}</strong><br>
+      ${identity.design_number || '—'} &nbsp;·&nbsp; Shafts: ${shaftCount}
+    </div>
+  </div>
+
+  <div class="sec-label">Shaft Budget — Border vs Body</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+    <div style="background:#F9F9FB;border-radius:8px;padding:10px 12px;border-top:2px solid #1D1D1F;">
+      <div style="font-size:8px;color:#8E8E93;font-weight:600;text-transform:uppercase;">Total Loom Shafts</div>
+      <div style="font-size:22px;font-weight:800;color:#1D1D1F;margin-top:3px;">${shaftCount}</div>
+    </div>
+    <div style="background:#FFF7ED;border-radius:8px;padding:10px 12px;border-top:2px solid #EA580C;">
+      <div style="font-size:8px;color:#EA580C;font-weight:600;text-transform:uppercase;">Border Reserved</div>
+      <div style="font-size:22px;font-weight:800;color:#C2410C;margin-top:3px;">${borderShaftsUsed}</div>
+    </div>
+    <div style="background:${borderShaftsUsed > shaftCount ? '#FEF2F2' : '#EAF3FF'};border-radius:8px;padding:10px 12px;border-top:2px solid ${borderShaftsUsed > shaftCount ? '#EF4444' : '#007AFF'};">
+      <div style="font-size:8px;color:${borderShaftsUsed > shaftCount ? '#EF4444' : '#007AFF'};font-weight:600;text-transform:uppercase;">Body Budget</div>
+      <div style="font-size:22px;font-weight:800;color:${borderShaftsUsed > shaftCount ? '#DC2626' : '#007AFF'};margin-top:3px;">${Math.max(0, shaftCount - borderShaftsUsed)}</div>
+    </div>
+  </div>
+
+  <!-- Shaft budget bar -->
+  <div style="height:14px;border-radius:7px;overflow:hidden;background:#E5E5EA;display:flex;margin-bottom:6px;">
+    <div style="width:${Math.min((borderShaftsUsed/shaftCount)*100,100)}%;background:#EA580C;border-radius:7px 0 0 7px;"></div>
+    <div style="flex:1;background:#007AFF;opacity:0.3;"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:8px;color:#8E8E93;margin-bottom:14px;">
+    <span>🧵 Border: ${borderShaftsUsed} shafts (${Math.round((borderShaftsUsed/shaftCount)*100)}%)</span>
+    <span>⬛ Body: ${Math.max(0,shaftCount-borderShaftsUsed)} shafts (${Math.round((Math.max(0,shaftCount-borderShaftsUsed)/shaftCount)*100)}%)</span>
+  </div>
+
+  ${borderShaftsUsed > shaftCount ? `
+  <div style="padding:10px 14px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;font-size:10px;color:#DC2626;font-weight:600;margin-bottom:12px;">
+    ❌ Border requires ${borderShaftsUsed} shafts but loom only has ${shaftCount}. Reduce border complexity or increase shaft count.
+  </div>` : `
+  <div style="padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:10px;color:#166534;margin-bottom:12px;">
+    ✓ Body peg plan must use ≤ ${Math.max(0,shaftCount-borderShaftsUsed)} shafts. Shafts ${borderShaftsUsed+1}–${shaftCount} are reserved for border zones.
+  </div>`}
+
+  <div class="sec-label">Warp Ends Distribution</div>
+  ${calcOutputs ? `
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
+    <div style="background:#F9F9FB;border-radius:8px;padding:10px 12px;border-top:2px solid #1D1D1F;">
+      <div style="font-size:8px;color:#8E8E93;font-weight:600;text-transform:uppercase;">Total Ends (Loom)</div>
+      <div style="font-size:20px;font-weight:800;color:#1D1D1F;margin-top:3px;">${(calcOutputs.total_warp_ends + borderEnds).toLocaleString()}</div>
+    </div>
+    <div style="background:#FFF7ED;border-radius:8px;padding:10px 12px;border-top:2px solid #EA580C;">
+      <div style="font-size:8px;color:#EA580C;font-weight:600;text-transform:uppercase;">Border Ends</div>
+      <div style="font-size:20px;font-weight:800;color:#C2410C;margin-top:3px;">${borderEnds.toLocaleString()}</div>
+    </div>
+    <div style="background:#EAF3FF;border-radius:8px;padding:10px 12px;border-top:2px solid #007AFF;">
+      <div style="font-size:8px;color:#007AFF;font-weight:600;text-transform:uppercase;">Body Ends</div>
+      <div style="font-size:20px;font-weight:800;color:#007AFF;margin-top:3px;">${calcOutputs.total_warp_ends.toLocaleString()}</div>
+    </div>
+  </div>
+
+  <!-- Warp layout visual bar -->
+  <div style="height:32px;border-radius:8px;overflow:hidden;display:flex;border:1px solid #E5E5EA;margin-bottom:6px;">
+    <div style="width:${(borderEnds/(calcOutputs.total_warp_ends+borderEnds)/2*100).toFixed(1)}%;background:#EFF6FF;border-right:2px solid #007AFF;display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:8px;font-weight:700;color:#007AFF;">L</span>
+    </div>
+    <div style="flex:1;background:repeating-linear-gradient(45deg,#F0F0F5,#F0F0F5 3px,#fff 3px,#fff 7px);display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:9px;font-weight:600;color:#8E8E93;background:rgba(255,255,255,0.85);padding:2px 8px;border-radius:4px;">Body ${calcOutputs.total_warp_ends.toLocaleString()} ends</span>
+    </div>
+    <div style="width:${(borderEnds/(calcOutputs.total_warp_ends+borderEnds)/2*100).toFixed(1)}%;background:#FFF7ED;border-left:2px solid #EA580C;display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:8px;font-weight:700;color:#EA580C;">R</span>
+    </div>
+  </div>
+  <div style="font-size:8px;color:#8E8E93;margin-bottom:14px;">
+    L = Left border &nbsp;·&nbsp; striped = body fabric &nbsp;·&nbsp; R = Right border
+  </div>
+
+  <div class="sec-label">Impact on Calculations</div>
+  <div style="background:#F9F9FB;border-radius:8px;padding:10px 14px;font-size:10px;line-height:1.8;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><span style="color:#8E8E93;">Warp Weight (body only):</span> <strong>${calcOutputs.warp_weight_per_100m_g.toFixed(1)} g/100m</strong></div>
+      <div><span style="color:#8E8E93;">Cost/meter (adjusted):</span> <strong>$${calcOutputs.cost_per_meter.toFixed(2)}</strong></div>
+      <div><span style="color:#8E8E93;">Body EPI:</span> <strong>${calcOutputs.epi}</strong></div>
+      <div><span style="color:#8E8E93;">Reed Space:</span> <strong>${calcOutputs.reed_space_inches.toFixed(1)}"</strong></div>
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #E5E5EA;font-size:9px;color:#8E8E93;">
+      Body shaft budget = Total shafts (${shaftCount}) − Border shafts (${borderShaftsUsed}) = ${Math.max(0,shaftCount-borderShaftsUsed)} shafts &nbsp;·&nbsp;
+      Body ends = Total ends (${(calcOutputs.total_warp_ends+borderEnds).toLocaleString()}) − Border ends (${borderEnds}) = ${calcOutputs.total_warp_ends.toLocaleString()} ends
+    </div>
+  </div>` : ''}
+
+  <div class="page-footer">
+    <span>FabricAI Studio — Solerix Technologies</span>
+    <span>${identity.design_number || 'Draft'} · Page 3 of 4</span>
+  </div>
+</div>` : ''}
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 4 — Fabric Simulation (matches website SimulationPanel)
 ═══════════════════════════════════════════════════════ -->
 <div class="page">
   <div class="brand-header">
@@ -511,7 +617,7 @@ export async function downloadPDF() {
 
   <div class="page-footer">
     <span>FabricAI Studio — Solerix Technologies</span>
-    <span>${identity.design_number || 'Draft'} · Page 3 of 3</span>
+    <span>${identity.design_number || 'Draft'} · ${borderShaftsUsed > 0 ? 'Page 4 of 4' : 'Page 3 of 3'}</span>
   </div>
 </div>
 

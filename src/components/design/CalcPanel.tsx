@@ -3,8 +3,11 @@
 import { useDesignStore } from '@/lib/store/designStore'
 
 export default function CalcPanel() {
-  const calcOutputs = useDesignStore((s) => s.calcOutputs)
-  const weftSystem = useDesignStore((s) => s.weftSystem)
+  const calcOutputs      = useDesignStore((s) => s.calcOutputs)
+  const weftSystem       = useDesignStore((s) => s.weftSystem)
+  const borderShaftsUsed = useDesignStore((s) => s.borderShaftsUsed)
+  const borderEnds       = useDesignStore((s) => s.borderEnds)
+  const shaftCount       = useDesignStore((s) => s.shaftCount)
 
   if (!calcOutputs) {
     return (
@@ -78,6 +81,95 @@ export default function CalcPanel() {
       </div>
 
       {/* Key metrics row */}
+      {/* Border Impact card — only shown when border has been compiled */}
+      {borderShaftsUsed > 0 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #FF660014 0%, #EA580C08 100%)',
+          border: '1px solid rgba(234,88,12,0.18)',
+          borderRadius: 14, padding: '14px 16px',
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#C2410C',
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+            🧵 Border Impact
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+            {/* Shaft budget split */}
+            <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA',
+              borderRadius: 10, padding: '9px 11px' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#EA580C',
+                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                Border Shafts
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#C2410C',
+                letterSpacing: '-0.02em', lineHeight: 1 }}>
+                {borderShaftsUsed}
+                <span style={{ fontSize: 10, fontWeight: 500, color: '#EA580C' }}>
+                  /{shaftCount}
+                </span>
+              </div>
+            </div>
+            <div style={{
+              background: borderShaftsUsed > shaftCount
+                ? '#FEF2F2' : 'rgba(0,122,255,0.06)',
+              border: `1px solid ${borderShaftsUsed > shaftCount ? '#FCA5A5' : 'var(--accent-ring)'}`,
+              borderRadius: 10, padding: '9px 11px',
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 700,
+                color: borderShaftsUsed > shaftCount ? 'var(--red)' : 'var(--accent)',
+                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                Body Budget
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800,
+                color: borderShaftsUsed > shaftCount ? 'var(--red)' : 'var(--accent)',
+                letterSpacing: '-0.02em', lineHeight: 1 }}>
+                {Math.max(0, shaftCount - borderShaftsUsed)}
+                <span style={{ fontSize: 10, fontWeight: 500, opacity: 0.65 }}> shafts</span>
+              </div>
+            </div>
+          </div>
+          {/* Ends split */}
+          {calcOutputs && borderEnds > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA',
+                borderRadius: 10, padding: '9px 11px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#EA580C',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                  Border Ends
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#C2410C',
+                  letterSpacing: '-0.02em' }}>
+                  {borderEnds.toLocaleString()}
+                </div>
+              </div>
+              <div style={{ background: 'rgba(0,122,255,0.06)', border: '1px solid var(--accent-ring)',
+                borderRadius: 10, padding: '9px 11px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--accent)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                  Body Ends
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)',
+                  letterSpacing: '-0.02em' }}>
+                  {Math.max(0, calcOutputs.total_warp_ends - borderEnds).toLocaleString()}
+                </div>
+              </div>
+            </div>
+          )}
+          {borderShaftsUsed > shaftCount && (
+            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--red)', fontWeight: 600,
+              padding: '7px 10px', background: '#FEF2F2', borderRadius: 8, border: '1px solid #FCA5A5' }}>
+              ⚠ Border exceeds loom shaft capacity! Increase shaft count in Peg Plan or simplify border weaves.
+            </div>
+          )}
+          {borderShaftsUsed <= shaftCount && borderShaftsUsed > shaftCount * 0.6 && (
+            <div style={{ marginTop: 10, fontSize: 11, color: '#92400E',
+              padding: '7px 10px', background: '#FFFBEB', borderRadius: 8, border: '1px solid #FDE68A' }}>
+              ⚠ Border is using {Math.round((borderShaftsUsed / shaftCount) * 100)}% of available shafts — body design is heavily constrained.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* EPI */}
       <MetricCard label="ENDS PER INCH" value={String(calcOutputs.epi)} />
       <MetricCard label="PRODUCTION" value={calcOutputs.production_m_per_hr.toFixed(2)} unit="m/hr" />
 

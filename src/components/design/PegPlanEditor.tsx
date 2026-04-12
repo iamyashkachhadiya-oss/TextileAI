@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { textToMatrix, matrixToText } from '@/lib/pegplan/parser'
 import WeaveCanvas from './WeaveCanvas'
+import { useDesignStore } from '@/lib/store/designStore'
 
 interface PegPlanEditorProps {
   shaftCount: number
@@ -93,8 +94,50 @@ export default function PegPlanEditor({ shaftCount, onChange, initialText = '' }
   const repeatW = matrix[0]?.length || 0
   const repeatH = picks
 
+  // Read border shaft reservation from global store
+  const borderShaftsUsed = useDesignStore(s => s.borderShaftsUsed)
+  const bodyBudget = Math.max(0, shaftCount - borderShaftsUsed)
+  const bodyShaftsOver = borderShaftsUsed > 0 &&
+    matrix.some(row => row.some((_, ci) => ci >= bodyBudget && row[ci] === 1))
+
   return (
     <div style={{ width: '100%' }}>
+
+      {/* ── Shaft reservation banner ── */}
+      {borderShaftsUsed > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '10px 14px', borderRadius: 10, marginBottom: 14,
+          background: bodyShaftsOver ? '#FEF2F2' : '#F0FDF4',
+          border: `1px solid ${bodyShaftsOver ? '#FCA5A5' : '#BBF7D0'}`,
+        }}>
+          <div style={{ fontSize: 18 }}>{bodyShaftsOver ? '❌' : '✓'}</div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700,
+              color: bodyShaftsOver ? '#DC2626' : '#166534' }}>
+              {bodyShaftsOver
+                ? `Body peg plan exceeds shaft budget!`
+                : `Body shaft budget: ${bodyBudget} of ${shaftCount} shafts`}
+            </div>
+            <div style={{ fontSize: 11, color: bodyShaftsOver ? '#DC2626' : '#15803D', marginTop: 2 }}>
+              Border Design has claimed {borderShaftsUsed} shaft{borderShaftsUsed !== 1 ? 's' : ''}.
+              {' '}Body peg plan must only use shafts 1–{bodyBudget}.
+            </div>
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+            <div style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99,
+              background: '#FFF7ED', color: '#EA580C', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              🧵 Border: {borderShaftsUsed}
+            </div>
+            <div style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99,
+              background: bodyShaftsOver ? '#FEE2E2' : 'rgba(0,122,255,0.1)',
+              color: bodyShaftsOver ? '#DC2626' : '#007AFF',
+              fontWeight: 700, whiteSpace: 'nowrap' }}>
+              ⬛ Body: {bodyBudget}
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* LEFT — Text Input */}
         <div style={{ display: 'flex', gap: 12 }}>

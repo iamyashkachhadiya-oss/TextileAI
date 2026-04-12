@@ -40,6 +40,11 @@ interface DesignState {
   // Calculations
   calcOutputs: CalcOutputs | null
 
+  // ─── Border state (shared across all tabs) ────────────────────────────────
+  // Set by BorderForm after compilation; consumed by CalcPanel + PegPlanEditor
+  borderShaftsUsed: number   // shafts consumed by left+right border zones
+  borderEnds: number         // total warp ends in border zones (left + right)
+
   // State management
   isDirty: boolean
   isSaving: boolean
@@ -68,6 +73,8 @@ interface DesignState {
   setPegPlan: (text: string, matrix: number[][]) => void
   setDraftSequence: (seq: number[]) => void
   setWeaveMatrix: (matrix: number[][]) => void
+  // Called by BorderForm after compilation to push constraints into the store
+  setBorderCompiled: (shaftsUsed: number, borderEnds: number) => void
   recalculate: () => void
   loadFromSupabase: (designId: string) => Promise<void>
   saveToSupabase: () => Promise<void>
@@ -135,6 +142,9 @@ export const useDesignStore = create<DesignState>((set, get) => ({
   weftSystem: { ...defaultWeftSystem },
   loom: { ...defaultLoom },
   shaftCount: 16,
+  // Border compiled state
+  borderShaftsUsed: 0,
+  borderEnds: 0,
   pegPlanText: '1-->1,3,5,7,9,11,13,15\n2-->2,4,6,8,10,12,14,16\n3-->1,3,5,7,9,11,13,15\n4-->2,4,6,8,10,12,14,16\n5-->1,2,5,6,9,10,13,14\n6-->3,4,7,8,11,12,15,16\n7-->1,2,5,6,9,10,13,14\n8-->3,4,7,8,11,12,15,16',
   pegPlanMatrix: [
     [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
@@ -288,6 +298,12 @@ export const useDesignStore = create<DesignState>((set, get) => ({
     }))
   },
 
+  setBorderCompiled: (shaftsUsed, borderEnds) => {
+    set({ borderShaftsUsed: shaftsUsed, borderEnds })
+    // Trigger recalculate so CalcPanel updates with border-aware totals
+    get().recalculate()
+  },
+
   updateLoom: (loom) => {
     set((s) => ({
       loom: s.loom ? { ...s.loom, ...loom } : { ...defaultLoom, ...loom },
@@ -321,9 +337,35 @@ export const useDesignStore = create<DesignState>((set, get) => ({
 
   recalculate: () => {
     const s = get()
-    const { loom, warp, weftSystem, warpSystem, pegPlanMatrix, draftSequence } = s
+    const { loom, warp, weftSystem, warpSystem, pegPlanMatrix, draftSequence, borderEnds } = s
     if (!loom || !warp || !weftSystem) return
     const calcOutputs = runAllCalculations(loom, warp, weftSystem)
+
+    // ── Apply border constraint to body calculations ──────────────────────
+    // Border ends eat into the total cloth width; body only has the remainder.
+    if (borderEnds > 0) {
+      const bodyEnds = Math.max(0, calcOutputs.total_warp_ends - borderEnds)
+      calcOutputs.total_warp_ends = bodyEnds
+
+      // Recalculate warp weight for the reduced body end count
+      const warpDenier = warp.count_system === 'denier'
+        ? warp.count_value
+        : 5315 / warp.count_value
+      const crimpFactor  = (100 + loom.warp_crimp_pct) / 100
+      const wastageFactor = (100 + loom.wastage_pct) / 100
+      calcOutputs.warp_weight_per_100m_g = Math.round(
+        (bodyEnds * warpDenier * 100) / 9000 * crimpFactor * wastageFactor * 100
+      ) / 100
+
+      // Recalculate warp cost contribution
+      const warpPrice = warp.price_per_kg || 0
+      const warpCostPerMeter = (calcOutputs.warp_weight_per_100m_g * warpPrice) / 100000
+      const weftCostPerMeter = calcOutputs.cost_per_meter - (calcOutputs.cost_per_meter * calcOutputs.warp_cost_pct / 100)
+      calcOutputs.cost_per_meter = Math.round((warpCostPerMeter + weftCostPerMeter) * 100) / 100
+      const total = warpCostPerMeter + weftCostPerMeter
+      calcOutputs.warp_cost_pct = total > 0 ? Math.round((warpCostPerMeter / total) * 100) : 0
+      calcOutputs.weft_cost_pct = total > 0 ? Math.round((weftCostPerMeter  / total) * 100) : 0
+    }
     
     // Automatically calculate Weave Matrix from Peg Plan and Draft Sequence
     let weaveMatrix: number[][] = pegPlanMatrix
@@ -364,6 +406,7 @@ export const useDesignStore = create<DesignState>((set, get) => ({
     }
     set({ calcOutputs, weaveMatrix, isDirty: true })
   },
+
 
   loadFromSupabase: async (designId: string) => {
     set({ isLoading: true })
@@ -498,6 +541,8 @@ export const useDesignStore = create<DesignState>((set, get) => ({
       weftSystem: { ...defaultWeftSystem },
       loom: { ...defaultLoom },
       shaftCount: 16,
+      borderShaftsUsed: 0,
+      borderEnds: 0,
       pegPlanText: '',
       pegPlanMatrix: [],
       weaveMatrix: [],

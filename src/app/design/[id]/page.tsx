@@ -171,21 +171,159 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
             </div>
           )}
 
-          {/* Border Preview Section */}
+          {/* Border Center Panel — shows live shaft constraint state */}
           {activeTab === 'Border' && (
-            <div className="card">
-              <div className="section-header">Border Configuration Preview</div>
-              <div style={{ 
-                height: 320, background: 'var(--bg-darker)', borderRadius: 8, 
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '1px dashed var(--border)'
-              }}>
-                <div style={{ textAlign: 'center', color: 'var(--text-3)' }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🧵</div>
-                  <div style={{ fontWeight: 600 }}>Border & Selvedge Layout</div>
-                  <div style={{ fontSize: 12 }}>Visualizing shaft assignments for border weaves</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+
+              {/* Shaft Budget Summary — always visible */}
+              <div className="card">
+                <div className="section-header">Shaft Budget — Live Constraint</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                  {/* Budget bar */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)' }}>
+                        Total loom shafts: <strong style={{ color: 'var(--text-1)' }}>{store.shaftCount}</strong>
+                      </span>
+                      {store.borderShaftsUsed > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 600,
+                          color: store.borderShaftsUsed > store.shaftCount ? 'var(--red)' : '#C2410C' }}>
+                          Border reserved: {store.borderShaftsUsed}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ height: 10, borderRadius: 5, overflow: 'hidden',
+                      background: 'rgba(0,0,0,0.07)', display: 'flex' }}>
+                      {store.borderShaftsUsed > 0 && (
+                        <div style={{
+                          width: `${Math.min((store.borderShaftsUsed / store.shaftCount) * 100, 100)}%`,
+                          background: store.borderShaftsUsed > store.shaftCount ? 'var(--red)' : '#EA580C',
+                          transition: 'width 0.4s',
+                        }} />
+                      )}
+                      <div style={{ flex: 1, background: '#007AFF', opacity: 0.25 }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                      <span style={{ fontSize: 11, color: '#EA580C', fontWeight: 600 }}>
+                        🧵 Border: {store.borderShaftsUsed} shafts
+                      </span>
+                      <span style={{ fontSize: 11,
+                        color: store.borderShaftsUsed > store.shaftCount ? 'var(--red)' : 'var(--accent)',
+                        fontWeight: 600 }}>
+                        ⬛ Body budget: {Math.max(0, store.shaftCount - store.borderShaftsUsed)} shafts
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Constraint cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                    {[
+                      { label: 'Total Shafts', value: store.shaftCount, color: 'var(--text-1)', bg: 'var(--bg)' },
+                      { label: 'Border Reserved', value: store.borderShaftsUsed, color: '#C2410C', bg: '#FFF7ED' },
+                      { label: 'Body Budget', value: Math.max(0, store.shaftCount - store.borderShaftsUsed),
+                        color: store.borderShaftsUsed > store.shaftCount ? 'var(--red)' : 'var(--accent)',
+                        bg: store.borderShaftsUsed > store.shaftCount ? '#FEF2F2' : 'rgba(0,122,255,0.06)' },
+                    ].map(({ label, value, color, bg }) => (
+                      <div key={label} style={{ background: bg, border: '1px solid var(--border-light)',
+                        borderRadius: 12, padding: '12px 14px' }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)',
+                          textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                          {label}
+                        </div>
+                        <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                          {value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Warnings */}
+                  {store.borderShaftsUsed > store.shaftCount && (
+                    <div style={{ padding: '10px 14px', borderRadius: 10, background: '#FEF2F2',
+                      border: '1px solid #FCA5A5', fontSize: 12, color: 'var(--red)', fontWeight: 600 }}>
+                      ❌ Border requires {store.borderShaftsUsed} shafts but loom only has {store.shaftCount}.
+                      Go to Peg Plan and increase shaft count, or simplify border weave patterns.
+                    </div>
+                  )}
+                  {store.borderShaftsUsed > 0 && store.borderShaftsUsed <= store.shaftCount && (
+                    <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F0FDF4',
+                      border: '1px solid #BBF7D0', fontSize: 12, color: '#166534' }}>
+                      ✓ Body peg plan must use ≤ <strong>{Math.max(0, store.shaftCount - store.borderShaftsUsed)} shafts</strong> —
+                      shafts {store.borderShaftsUsed + 1}–{store.shaftCount} are reserved by the border.
+                    </div>
+                  )}
+                  {store.borderShaftsUsed === 0 && (
+                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(0,0,0,0.03)',
+                      border: '1px solid var(--border-light)', fontSize: 12, color: 'var(--text-3)' }}>
+                      Configure border zones in the left panel, then click <strong>Compile</strong> to see the shaft budget split.
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Warp ends split — only after compilation */}
+              {store.borderEnds > 0 && store.calcOutputs && (
+                <div className="card">
+                  <div className="section-header">Warp Ends Distribution</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {/* Visual bar */}
+                    <div>
+                      <div style={{ display: 'flex', height: 40, borderRadius: 10, overflow: 'hidden',
+                        border: '1px solid var(--border-light)' }}>
+                        <div style={{
+                          width: `${(store.borderEnds / 2 / store.calcOutputs.total_warp_ends) * 100}%`,
+                          background: '#EFF6FF', borderRight: '2px solid #007AFF',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          minWidth: 0,
+                        }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#007AFF', whiteSpace: 'nowrap',
+                            overflow: 'hidden', padding: '0 4px' }}>
+                            L
+                          </div>
+                        </div>
+                        <div style={{ flex: 1, background: 'repeating-linear-gradient(45deg, #F0F0F5, #F0F0F5 3px, #fff 3px, #fff 7px)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)',
+                            background: 'rgba(255,255,255,0.85)', padding: '2px 8px', borderRadius: 4 }}>
+                            Body {(store.calcOutputs.total_warp_ends - store.borderEnds).toLocaleString()} ends
+                          </div>
+                        </div>
+                        <div style={{
+                          width: `${(store.borderEnds / 2 / store.calcOutputs.total_warp_ends) * 100}%`,
+                          background: '#FFF7ED', borderLeft: '2px solid #EA580C',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          minWidth: 0,
+                        }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#EA580C', whiteSpace: 'nowrap',
+                            overflow: 'hidden', padding: '0 4px' }}>
+                            R
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                      {[
+                        { label: 'Total Ends', value: store.calcOutputs.total_warp_ends.toLocaleString(), color: 'var(--text-1)', bg: 'var(--bg)' },
+                        { label: 'Border Ends', value: store.borderEnds.toLocaleString(), color: '#C2410C', bg: '#FFF7ED' },
+                        { label: 'Body Ends', value: (store.calcOutputs.total_warp_ends - store.borderEnds).toLocaleString(),
+                          color: 'var(--accent)', bg: 'rgba(0,122,255,0.06)' },
+                      ].map(({ label, value, color, bg }) => (
+                        <div key={label} style={{ background: bg, border: '1px solid var(--border-light)',
+                          borderRadius: 10, padding: '9px 11px' }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-3)',
+                            textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                            {label}
+                          </div>
+                          <div style={{ fontSize: 18, fontWeight: 800, color, letterSpacing: '-0.02em' }}>
+                            {value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

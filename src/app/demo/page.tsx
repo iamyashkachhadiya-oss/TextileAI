@@ -580,7 +580,7 @@ export default function DemoPage() {
             </> /* end predefined */}
 
             {centerMode === 'design-library' && (
-              <DesignLibrary />
+              <DesignLibrary onLoadDesign={() => setCenterMode('predefined')} />
             )}
 
             {centerMode === 'draft-to-peg' && (
