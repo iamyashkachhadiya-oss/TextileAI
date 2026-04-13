@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { designLibrary as staticLib } from '@/data/designLibrary'
+import { communityDesigns } from '@/data/communityDesigns'
 import { useDesignStore } from '@/lib/store/designStore'
 import {
   loadAllPresets, generateRandom, generateSimilar, buildDesign,
@@ -19,6 +20,7 @@ import {
 type LibTab = 'generative' | 'static'
 type GenCategory = 'all' | FabricCategory
 type ViewMode = 'visual' | 'shaft' | 'text'
+type CollectionFilter = 'all' | 'premium' | 'apple'
 
 // ─── Static design adapter (normalise to a common shape) ─────────────────────
 type SDesign = (typeof staticLib.designs)[number]
@@ -84,6 +86,8 @@ function PegGrid({ matrix, size, warpColor, weftColor }: {
             width={cellPx - 1} height={cellPx - 1}
             rx={size === 'modal' && cellPx > 8 ? 2 : 0}
             fill={c ? onClr : offClr}
+            stroke={c ? 'rgba(0,0,0,0.08)' : 'none'}
+            strokeWidth={0.5}
           />
         ))
       )}
@@ -92,20 +96,19 @@ function PegGrid({ matrix, size, warpColor, weftColor }: {
 }
 
 // ─── Copy button ─────────────────────────────────────────────────────────────
-function CopyBtn({ text, label = '⎘ Copy' }: { text: string; label?: string }) {
+function CopyBtn({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [done, setDone] = useState(false)
-  const copy = () => {
-    navigator.clipboard.writeText(text).then(() => {
-      setDone(true); setTimeout(() => setDone(false), 1600)
-    })
-  }
+  const copy = () => navigator.clipboard.writeText(text).then(() => { setDone(true); setTimeout(() => setDone(false), 1600) })
   return (
     <button onClick={copy} style={{
-      padding: '4px 10px', fontSize: 11, fontWeight: 700, borderRadius: 6,
-      border: `1px solid ${done ? '#BBF7D0' : 'rgba(0,0,0,0.09)'}`,
-      background: done ? '#DCFCE7' : '#F5F5F7',
-      color: done ? '#15803D' : '#64748B',
-      cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 0.15s',
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '4px 12px', fontSize: 11, fontWeight: 600, borderRadius: 8,
+      border: '1px solid rgba(0,0,0,0.09)',
+      background: done ? 'rgba(52,199,89,0.09)' : 'rgba(0,0,0,0.035)',
+      color: done ? '#1A7F37' : '#6E6E73',
+      cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+      transition: 'all 0.18s ease', letterSpacing: '-0.01em',
+      boxShadow: done ? 'inset 0 0 0 1px rgba(52,199,89,0.25)' : 'none',
     }}>
       {done ? '✓ Copied' : label}
     </button>
@@ -113,19 +116,30 @@ function CopyBtn({ text, label = '⎘ Copy' }: { text: string; label?: string })
 }
 
 // ─── Design Card ─────────────────────────────────────────────────────────────
+const CAT_META: Record<string, { color: string; label: string; glow: string }> = {
+  base_weaves: { color: '#5856D6', label: 'Base',      glow: 'rgba(88,86,214,0.35)' },
+  presets:     { color: '#007AFF', label: 'Preset',    glow: 'rgba(0,122,255,0.35)' },
+  dobby:       { color: '#AF52DE', label: 'Dobby',     glow: 'rgba(175,82,222,0.35)' },
+  specialty:   { color: '#FF3B30', label: 'Specialty', glow: 'rgba(255,59,48,0.35)' },
+  modifiers:   { color: '#FF9500', label: 'Modifier',  glow: 'rgba(255,149,0,0.35)' },
+}
+
+const CARD_PALETTES: Record<string, { from: string; to: string }> = {
+  base_weaves: { from: '#f8f8ff', to: '#f0f0f5' },
+  presets:     { from: '#f0f7ff', to: '#e6f0ff' },
+  dobby:       { from: '#f5f0f5', to: '#ebe0eb' },
+  specialty:   { from: '#fff5f5', to: '#fce8e8' },
+  modifiers:   { from: '#fffbf0', to: '#fdf3d8' },
+}
+
 function DesignCard({ design, bookmarked, onOpen, onBookmark, index }: {
   design: GeneratedDesign; bookmarked: boolean
   onOpen: () => void; onBookmark: () => void; index: number
 }) {
-  const sw = COLOR_SWATCHES[design.params?.colors?.[0] || 'indigo'] || COLOR_SWATCHES.indigo
-  const bgSw = COLOR_SWATCHES[design.params?.colors?.[1] || 'white'] || COLOR_SWATCHES.white
+  const sw   = COLOR_SWATCHES[design.params?.colors?.[0] || 'indigo'] || COLOR_SWATCHES.indigo
   const [hovered, setHovered] = useState(false)
-
-  const categoryColor: Record<string, string> = {
-    base_weaves: '#4F46E5', presets: '#0891B2', dobby: '#7C3AED',
-    specialty: '#DC2626', modifiers: '#D97706',
-  }
-  const catColor = categoryColor[design.category || 'presets'] || '#4F46E5'
+  const meta    = CAT_META[design.category || 'presets'] || CAT_META.presets
+  const palette = CARD_PALETTES[design.category || 'presets'] || CARD_PALETTES.presets
 
   return (
     <div
@@ -133,62 +147,133 @@ function DesignCard({ design, bookmarked, onOpen, onBookmark, index }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#fff',
-        border: `1px solid ${hovered ? catColor + '40' : 'rgba(0,0,0,0.07)'}`,
+        background: '#FFFFFF',
+        border: `1px solid ${hovered ? meta.color + '30' : 'rgba(0,0,0,0.07)'}`,
         borderRadius: 16, cursor: 'pointer', overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
-        boxShadow: hovered ? `0 8px 28px ${catColor}18, 0 2px 8px rgba(0,0,0,0.06)` : '0 1px 4px rgba(0,0,0,0.05)',
-        transform: hovered ? 'translateY(-3px)' : 'none',
-        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+        boxShadow: hovered
+          ? `0 12px 32px rgba(0,0,0,0.13), 0 0 0 1px ${meta.color}22, 0 2px 8px rgba(0,0,0,0.08)`
+          : '0 1px 4px rgba(0,0,0,0.06)',
+        transform: hovered ? 'translateY(-3px) scale(1.008)' : 'translateY(0) scale(1)',
+        transition: 'all 0.24s cubic-bezier(0.34,1.15,0.64,1)',
       }}
     >
-      <div style={{ height: 3, background: catColor }} />
+      {/* Preview pane */}
       <div style={{
-        background: sw.weft + '55',
+        background: `linear-gradient(155deg, ${palette.from} 0%, ${palette.to} 100%)`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20, minHeight: 160, position: 'relative',
+        padding: 18, minHeight: 152, position: 'relative', overflow: 'hidden',
       }}>
-        <PegGrid matrix={design.matrix} size="card" warpColor={sw.warp} weftColor={bgSw.warp + '88'} />
+        {/* Subtle grid bg */}
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.04,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+          backgroundSize: '12px 12px',
+        }} />
+
+        {/* Glow behind weave */}
+        {hovered && (
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            width: 100, height: 100, borderRadius: '50%',
+            background: meta.glow,
+            filter: 'blur(28px)',
+            transition: 'opacity 0.3s ease',
+            pointerEvents: 'none',
+          }} />
+        )}
+
+        <div style={{ position: 'relative', zIndex: 1, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }}>
+          <PegGrid matrix={design.matrix} size="card"
+            warpColor={sw.warp}
+            weftColor='rgba(0,0,0,0.04)'
+          />
+        </div>
+
+        {/* Bookmark */}
         <button
           onClick={e => { e.stopPropagation(); onBookmark() }}
           style={{
-            position: 'absolute', top: 8, right: 8,
+            position: 'absolute', top: 9, right: 9,
             width: 28, height: 28, borderRadius: 8,
-            background: bookmarked ? '#FEF9C3' : 'rgba(255,255,255,0.9)',
-            border: 'none', cursor: 'pointer', fontSize: 14,
+            background: bookmarked ? 'rgba(255,214,10,0.22)' : 'rgba(255,255,255,0.08)',
+            border: `0.5px solid ${bookmarked ? 'rgba(255,214,10,0.4)' : 'rgba(255,255,255,0.12)'}`,
+            backdropFilter: 'blur(10px)',
+            cursor: 'pointer', fontSize: 13,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+            color: bookmarked ? '#FFD60A' : 'rgba(255,255,255,0.5)',
+            transition: 'all 0.18s ease',
+            zIndex: 2,
           }}
         >
           {bookmarked ? '★' : '☆'}
         </button>
+
+        {/* Bottom meta bar */}
         <div style={{
-          position: 'absolute', bottom: 6, right: 8,
-          fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700,
-          color: 'rgba(0,0,0,0.4)', background: 'rgba(255,255,255,0.75)',
-          padding: '1px 5px', borderRadius: 4,
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          padding: '18px 10px 7px',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+          zIndex: 2,
         }}>
-          {design.repeat_rows}×{design.repeat_cols}
+          <span style={{
+            fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 600,
+            color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em',
+          }}>{design.repeat_rows}×{design.repeat_cols}</span>
+          <span style={{
+            fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 600,
+            color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em',
+          }}>{design.shaft_count}sh</span>
         </div>
+
+        {/* Category colour stripe */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+          background: `linear-gradient(90deg, ${meta.color}cc, ${meta.color}44)`,
+        }} />
       </div>
-      <div style={{ padding: '10px 12px 12px', flex: 1 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#111', marginBottom: 5, lineHeight: 1.3 }}>
+
+      {/* Info pane */}
+      <div style={{
+        padding: '11px 13px 12px', flex: 1,
+        display: 'flex', flexDirection: 'column', gap: 6,
+        background: hovered ? '#FAFAFE' : '#FFFFFF',
+        transition: 'background 0.2s ease',
+      }}>
+        <div style={{
+          fontSize: 12, fontWeight: 700, color: '#1D1D1F',
+          lineHeight: 1.33, letterSpacing: '-0.015em',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
           {design.display_name}
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 6 }}>
-          <span style={{ fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: catColor + '15', color: catColor }}>
-            {design.category?.replace('_', ' ')}
-          </span>
-          <span style={{ fontSize: 9.5, padding: '2px 7px', borderRadius: 99, background: '#F1F5F9', color: '#475569' }}>
-            {design.shaft_count}sh
+
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
+            padding: '2px 7px', borderRadius: 99,
+            background: meta.color + '12', color: meta.color,
+            textTransform: 'uppercase', border: `0.5px solid ${meta.color}30`,
+          }}>
+            {meta.label}
           </span>
           {design.weight && (
-            <span style={{ fontSize: 9.5, padding: '2px 7px', borderRadius: 99, background: '#F8FAFC', color: '#64748B' }}>
+            <span style={{
+              fontSize: 9, padding: '2px 7px', borderRadius: 99,
+              background: 'rgba(0,0,0,0.04)', color: '#86868B',
+              textTransform: 'capitalize',
+            }}>
               {design.weight}
             </span>
           )}
         </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#94A3B8', letterSpacing: 0.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+
+        <div style={{
+          fontFamily: 'var(--font-mono)', fontSize: 8.5, color: '#C7C7CC',
+          letterSpacing: '0.05em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
           {design.name_code}
         </div>
       </div>
@@ -255,98 +340,129 @@ function DesignModal({ design, onClose, onLoad, onSimilar, bookmarked, onBookmar
   return (
     <div onClick={onClose} style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(10,10,20,0.55)', backdropFilter: 'blur(10px)',
+      background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(12px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+      animation: 'fadeIn 0.18s ease',
     }}>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#fff', borderRadius: 24, width: '100%', maxWidth: 780,
-        maxHeight: '90vh', overflowY: 'auto',
-        boxShadow: '0 40px 80px rgba(0,0,0,0.28)',
+        background: 'rgba(255,255,255,0.98)', borderRadius: 26, width: '100%', maxWidth: 800,
+        maxHeight: '92vh', overflowY: 'auto',
+        boxShadow: `0 0 0 0.5px rgba(0,0,0,0.12), 0 48px 96px rgba(0,0,0,0.32), 0 0 80px ${accent}18`,
         display: 'flex', flexDirection: 'column',
+        animation: 'slideUp 0.22s cubic-bezier(0.34,1.1,0.64,1)',
       }}>
-        {/* Top accent */}
-        <div style={{ height: 4, background: `linear-gradient(90deg, ${accent}, ${accent}99)`, borderRadius: '24px 24px 0 0' }} />
-
-        {/* Header */}
+        {/* Gradient Header Strip */}
         <div style={{
-          padding: '22px 28px 18px', borderBottom: '1px solid rgba(0,0,0,0.06)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          position: 'sticky', top: 0, background: '#fff', zIndex: 10,
+          background: `linear-gradient(135deg, ${accent}ee 0%, ${accent}88 100%)`,
+          padding: '22px 28px 20px',
+          position: 'sticky', top: 0, zIndex: 10,
+          borderRadius: '26px 26px 0 0',
         }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: accent + '15', color: accent }}>
-                {design.category?.replace('_', ' ')}
-              </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, background: '#F1F5F9', color: '#475569', padding: '2px 8px', borderRadius: 6 }}>
-                {design.name_code}
-              </span>
-              <CopyBtn text={design.full_code} label="⎘ Code" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '2.5px 10px', borderRadius: 99,
+                  background: 'rgba(255,255,255,0.22)', color: '#fff',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', backdropFilter: 'blur(8px)',
+                }}>
+                  {design.category?.replace('_', ' ')}
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+                  background: 'rgba(0,0,0,0.22)', color: 'rgba(255,255,255,0.9)',
+                  padding: '2.5px 9px', borderRadius: 7, letterSpacing: '0.04em',
+                }}>
+                  {design.name_code}
+                </span>
+                <CopyBtn text={design.full_code} label="⎘ Code" />
+              </div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.03em', textShadow: '0 1px 8px rgba(0,0,0,0.2)' }}>
+                {design.display_name}
+              </h3>
+              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', marginTop: 5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>{design.shaft_count} Shafts</span>
+                <span style={{ opacity: 0.5 }}>·</span>
+                <span>{design.repeat_rows}×{design.repeat_cols} repeat</span>
+                {design.is_valid ? (
+                  <span style={{ background: 'rgba(52,199,89,0.22)', color: '#A7F3D0', fontWeight: 700, padding: '1px 8px', borderRadius: 99, fontSize: 10 }}>✓ Valid</span>
+                ) : (
+                  <span style={{ background: 'rgba(255,59,48,0.22)', color: '#FCA5A5', fontWeight: 700, padding: '1px 8px', borderRadius: 99, fontSize: 10 }}>⚠ {design.warnings[0]}</span>
+                )}
+              </div>
             </div>
-            <h3 style={{ fontSize: 20, fontWeight: 800, color: '#111', margin: 0, letterSpacing: '-0.025em' }}>
-              {design.display_name}
-            </h3>
-            <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-              {design.shaft_count} Shafts · {design.repeat_rows}×{design.repeat_cols} repeat
-              {design.is_valid ? (
-                <span style={{ color: '#16A34A', fontWeight: 600, marginLeft: 8 }}>✓ Valid</span>
-              ) : (
-                <span style={{ color: '#DC2626', fontWeight: 600, marginLeft: 8 }}>⚠ {design.warnings[0]}</span>
-              )}
+            <div style={{ display: 'flex', gap: 7, flexShrink: 0, marginLeft: 16 }}>
+              <button onClick={onBookmark} style={{
+                width: 38, height: 38, borderRadius: 11,
+                background: bookmarked ? 'rgba(255,214,10,0.25)' : 'rgba(255,255,255,0.14)',
+                border: `1px solid ${bookmarked ? 'rgba(255,214,10,0.5)' : 'rgba(255,255,255,0.2)'}`,
+                backdropFilter: 'blur(10px)',
+                cursor: 'pointer', fontSize: 17,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: bookmarked ? '#FFD60A' : 'rgba(255,255,255,0.7)',
+                transition: 'all 0.15s ease',
+              }}>{bookmarked ? '★' : '☆'}</button>
+              <button onClick={onClose} style={{
+                width: 38, height: 38, borderRadius: 11,
+                background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(10px)',
+                cursor: 'pointer', fontSize: 18, color: 'rgba(255,255,255,0.8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 300, lineHeight: 1, transition: 'all 0.15s ease',
+              }}>×</button>
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <button onClick={onBookmark} style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: bookmarked ? '#FEF9C3' : 'rgba(0,0,0,0.05)',
-              border: 'none', cursor: 'pointer', fontSize: 16,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>{bookmarked ? '★' : '☆'}</button>
-            <button onClick={onClose} style={{
-              width: 36, height: 36, borderRadius: 10, background: 'rgba(0,0,0,0.05)',
-              border: 'none', cursor: 'pointer', fontSize: 20, color: '#64748B',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>×</button>
           </div>
         </div>
 
         {/* Body */}
-        <div style={{ padding: '24px 28px', display: 'flex', gap: 32 }}>
+        <div style={{ padding: '24px 28px 0', display: 'flex', gap: 28 }}>
           {/* Left: Matrix Viewer */}
-          <div style={{ width: 260, flexShrink: 0 }}>
+          <div style={{ width: 268, flexShrink: 0 }}>
             {/* View toggle */}
-            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', padding: 3, borderRadius: 10, marginBottom: 14 }}>
+            <div style={{
+              display: 'flex', background: 'rgba(0,0,0,0.05)', padding: 3,
+              borderRadius: 11, marginBottom: 14, border: '0.5px solid rgba(0,0,0,0.06)',
+            }}>
               {(['visual', 'shaft', 'text'] as ViewMode[]).map(v => (
                 <button key={v} onClick={() => setView(v)} style={{
                   flex: 1, fontSize: 10.5, fontWeight: view === v ? 700 : 500,
-                  padding: '5px 6px', border: 'none', borderRadius: 8, cursor: 'pointer',
+                  padding: '5.5px 6px', border: 'none', borderRadius: 9, cursor: 'pointer',
                   background: view === v ? '#fff' : 'transparent',
-                  color: view === v ? '#111' : '#64748B',
-                  boxShadow: view === v ? '0 1px 4px rgba(0,0,0,0.10)' : 'none',
-                  transition: 'all 0.15s', fontFamily: 'inherit',
+                  color: view === v ? '#111' : '#86868B',
+                  boxShadow: view === v ? '0 1px 5px rgba(0,0,0,0.12), 0 0.5px 1px rgba(0,0,0,0.07)' : 'none',
+                  transition: 'all 0.16s ease', fontFamily: 'inherit',
                 }}>
-                  {v === 'visual' ? '⬛ Visual' : v === 'shaft' ? '≡ Shaft' : '📋 Text'}
+                  {v === 'visual' ? '◼ Visual' : v === 'shaft' ? '≡ Shaft' : '⌨ Text'}
                 </button>
               ))}
             </div>
 
+            {/* Preview box */}
             <div style={{
-              background: sw.weft + '66', borderRadius: 14, padding: 16,
-              border: '1px solid rgba(0,0,0,0.06)', minHeight: 200,
+              background: '#fcfcfd',
+              borderRadius: 16, padding: 20,
+              border: '1px solid rgba(0,0,0,0.05)',
+              minHeight: 210,
               display: 'flex', alignItems: 'center', justifyContent: 'center', overflowX: 'auto',
+              boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.02)',
             }}>
-              {view === 'visual' && <PegGrid matrix={design.matrix} size="modal" warpColor={sw.warp} weftColor={sw2.warp + '66'} />}
+              {view === 'visual' && <PegGrid matrix={design.matrix} size="modal" warpColor={sw.warp} weftColor='rgba(0,0,0,0.06)' />}
               {view === 'shaft' && (
-                <pre style={{ margin: 0, fontSize: 10.5, fontFamily: 'var(--font-mono)', color: '#1E293B', lineHeight: 1.9, whiteSpace: 'pre' }}>
+                <pre style={{ margin: 0, fontSize: 10, fontFamily: 'var(--font-mono)', color: '#48484a', lineHeight: 1.9, whiteSpace: 'pre' }}>
                   {shaftText}
                 </pre>
               )}
               {view === 'text' && (
                 <div style={{ width: '100%' }}>
                   <textarea readOnly value={pickText} rows={Math.min(design.matrix.length + 1, 12)}
-                    style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 11.5, lineHeight: 1.7,
-                      background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8,
-                      padding: '8px 10px', color: '#1E293B', resize: 'none', outline: 'none', cursor: 'text' }}
+                    style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.7,
+                      background: '#fff', border: '1px solid rgba(0,0,0,0.08)',
+                      borderRadius: 9, padding: '8px 10px', color: '#1d1d1f',
+                      resize: 'none', outline: 'none', cursor: 'text' }}
                   />
                   <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                     <CopyBtn text={pickText} label="⎘ Copy Pick Text" />
@@ -357,50 +473,67 @@ function DesignModal({ design, onClose, onLoad, onSimilar, bookmarked, onBookmar
 
             {/* Color swatches */}
             {design.params?.colors && design.params.colors.length > 0 && (
-              <div style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: '#94A3B8', fontWeight: 600 }}>COLORS</span>
+              <div style={{ marginTop: 12, display: 'flex', gap: 7, alignItems: 'center' }}>
+                <span style={{ fontSize: 9, color: '#AEAEB2', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Colors</span>
                 {design.params.colors.map(c => (
                   <div key={c} title={c} style={{
-                    width: 22, height: 22, borderRadius: 6, border: '2px solid rgba(0,0,0,0.08)',
+                    width: 20, height: 20, borderRadius: 6,
+                    border: '1.5px solid rgba(0,0,0,0.10)',
                     background: (COLOR_SWATCHES[c] || COLOR_SWATCHES.indigo).warp,
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
                   }} />
                 ))}
               </div>
             )}
 
-            {/* Export buttons */}
-            <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+            {/* Export strip */}
+            <div style={{ marginTop: 14, display: 'flex', gap: 7 }}>
               <button onClick={downloadSVG} style={{
-                flex: 1, height: 34, fontSize: 11.5, fontWeight: 700, borderRadius: 9,
-                background: '#F1F5F9', color: '#475569', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-              }}>⬇ SVG</button>
+                flex: 1, height: 34, fontSize: 11, fontWeight: 700, borderRadius: 9,
+                background: '#F2F2F7', color: '#48484A', border: '0.5px solid rgba(0,0,0,0.08)',
+                cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em',
+                transition: 'background 0.15s ease',
+              }}>↓ SVG</button>
               <button onClick={downloadWIF} style={{
-                flex: 1, height: 34, fontSize: 11.5, fontWeight: 700, borderRadius: 9,
-                background: '#F1F5F9', color: '#475569', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-              }}>⬇ WIF</button>
+                flex: 1, height: 34, fontSize: 11, fontWeight: 700, borderRadius: 9,
+                background: '#F2F2F7', color: '#48484A', border: '0.5px solid rgba(0,0,0,0.08)',
+                cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em',
+                transition: 'background 0.15s ease',
+              }}>↓ WIF</button>
             </div>
           </div>
 
           {/* Right: Info */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, paddingBottom: 24 }}>
             {design.description && (
-              <p style={{ margin: '0 0 20px', fontSize: 13.5, color: '#475569', lineHeight: 1.65 }}>
+              <p style={{
+                margin: '0 0 18px', fontSize: 13, color: '#48484A',
+                lineHeight: 1.7, borderLeft: `3px solid ${accent}44`,
+                paddingLeft: 12,
+              }}>
                 {design.description}
               </p>
             )}
 
             {/* Specs grid */}
             <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px 16px',
-              background: '#F8FAFC', borderRadius: 14, padding: 16, border: '1px solid rgba(0,0,0,0.06)', marginBottom: 20,
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 14px',
+              background: '#F5F5F7', borderRadius: 16, padding: '16px 18px',
+              border: '0.5px solid rgba(0,0,0,0.07)', marginBottom: 20,
             }}>
               {specs.map(({ label, value }) => (
                 <div key={label}>
-                  <div style={{ fontSize: 9.5, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: '#AEAEB2',
+                    textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 3,
+                  }}>
                     {label}
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B', textTransform: 'capitalize' }}>
-                    {value || '—'}
+                  <div style={{
+                    fontSize: 13.5, fontWeight: 700, color: '#1D1D1F',
+                    textTransform: 'capitalize', letterSpacing: '-0.01em',
+                  }}>
+                    {value || <span style={{ color: '#C7C7CC' }}>—</span>}
                   </div>
                 </div>
               ))}
@@ -408,13 +541,20 @@ function DesignModal({ design, onClose, onLoad, onSimilar, bookmarked, onBookmar
 
             {/* Applications */}
             {design.applications && design.applications.length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 700, color: '#AEAEB2',
+                  textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 9,
+                }}>
                   Applications
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {design.applications.map(a => (
-                    <span key={a} style={{ fontSize: 11.5, padding: '4px 10px', borderRadius: 6, background: '#EFF6FF', color: '#2563EB', fontWeight: 600 }}>
+                    <span key={a} style={{
+                      fontSize: 11.5, padding: '5px 12px', borderRadius: 99,
+                      background: accent + '12', color: accent,
+                      fontWeight: 600, border: `0.5px solid ${accent}30`,
+                    }}>
                       {a}
                     </span>
                   ))}
@@ -426,7 +566,11 @@ function DesignModal({ design, onClose, onLoad, onSimilar, bookmarked, onBookmar
             {(design.tags || []).length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                 {(design.tags || []).map(t => (
-                  <span key={t} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#F3F4F6', color: '#64748B', border: '1px solid rgba(0,0,0,0.06)' }}>
+                  <span key={t} style={{
+                    fontSize: 10.5, padding: '3.5px 9px', borderRadius: 99,
+                    background: '#F2F2F7', color: '#86868B',
+                    border: '0.5px solid rgba(0,0,0,0.08)',
+                  }}>
                     #{t}
                   </span>
                 ))}
@@ -437,26 +581,34 @@ function DesignModal({ design, onClose, onLoad, onSimilar, bookmarked, onBookmar
 
         {/* Footer */}
         <div style={{
-          padding: '14px 28px', borderTop: '1px solid rgba(0,0,0,0.06)',
-          background: '#FAFAFA', borderRadius: '0 0 24px 24px',
-          display: 'flex', gap: 10, alignItems: 'center', position: 'sticky', bottom: 0,
+          padding: '14px 28px', borderTop: '0.5px solid rgba(0,0,0,0.08)',
+          background: 'rgba(248,248,250,0.96)', backdropFilter: 'blur(12px)',
+          borderRadius: '0 0 26px 26px',
+          display: 'flex', gap: 10, alignItems: 'center',
+          position: 'sticky', bottom: 0, zIndex: 10,
         }}>
           <button onClick={onSimilar} style={{
-            height: 38, padding: '0 18px', fontSize: 13, fontWeight: 700,
-            background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 10,
-            cursor: 'pointer', fontFamily: 'inherit', color: '#1E293B',
-          }}>✦ Similar</button>
+            height: 38, padding: '0 16px', fontSize: 12.5, fontWeight: 700,
+            background: 'rgba(0,0,0,0.055)', border: '0.5px solid rgba(0,0,0,0.09)',
+            borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', color: '#1D1D1F',
+            display: 'flex', alignItems: 'center', gap: 6,
+            transition: 'background 0.15s ease',
+          }}>✦ Similar Designs</button>
           <div style={{ flex: 1 }} />
           <button onClick={onClose} style={{
-            height: 38, padding: '0 16px', fontSize: 13, fontWeight: 500,
-            background: '#fff', border: '1px solid rgba(0,0,0,0.10)',
-            borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', color: '#64748B',
-          }}>Close</button>
+            height: 38, padding: '0 16px', fontSize: 12.5, fontWeight: 500,
+            background: '#fff', border: '0.5px solid rgba(0,0,0,0.12)',
+            borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', color: '#86868B',
+            transition: 'all 0.15s ease',
+          }}>Dismiss</button>
           <button onClick={onLoad} style={{
             height: 38, padding: '0 22px', fontSize: 13, fontWeight: 800,
-            background: accent, color: '#fff', border: 'none', borderRadius: 10,
+            background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
+            color: '#fff', border: 'none', borderRadius: 10,
             cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: `0 4px 14px ${accent}44`,
+            boxShadow: `0 4px 16px ${accent}50, inset 0 1px 0 rgba(255,255,255,0.15)`,
+            letterSpacing: '-0.015em',
+            transition: 'all 0.18s ease',
           }}>Load into Studio →</button>
         </div>
       </div>
@@ -481,22 +633,31 @@ function GenerationBanner({
   if (isDone) {
     return (
       <div style={{
-        background: 'linear-gradient(135deg, #ECFDF5, #F0FDF4)',
-        border: '1px solid #BBF7D0', borderRadius: 12,
-        padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
-        marginBottom: 12, flexShrink: 0,
+        background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(52,211,153,0.05) 100%)',
+        border: '0.5px solid rgba(16,185,129,0.25)', borderRadius: 13,
+        padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 12,
+        marginBottom: 10, flexShrink: 0,
+        boxShadow: '0 1px 6px rgba(16,185,129,0.08)',
       }}>
-        <span style={{ fontSize: 18 }}>✅</span>
+        <div style={{
+          width: 32, height: 32, borderRadius: 9,
+          background: 'linear-gradient(135deg, #10B981, #34D399)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 16, flexShrink: 0,
+          boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
+        }}>✓</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 800, color: '#065F46' }}>
-            {generated.toLocaleString()} designs generated!
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#065F46', letterSpacing: '-0.01em' }}>
+            {generated.toLocaleString()} designs ready
           </div>
-          <div style={{ fontSize: 11, color: '#047857', marginTop: 1 }}>All designs loaded into library. Use filters to explore.</div>
+          <div style={{ fontSize: 10.5, color: '#059669', marginTop: 1.5 }}>All loaded · use filters to explore</div>
         </div>
         <button onClick={onStart} style={{
-          height: 30, padding: '0 14px', fontSize: 11.5, fontWeight: 700,
-          border: '1px solid #4ADE80', borderRadius: 8, background: '#fff',
-          color: '#065F46', cursor: 'pointer', fontFamily: 'inherit',
+          height: 29, padding: '0 13px', fontSize: 11, fontWeight: 700,
+          border: '0.5px solid rgba(16,185,129,0.35)', borderRadius: 8,
+          background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)',
+          color: '#047857', cursor: 'pointer', fontFamily: 'inherit',
+          letterSpacing: '-0.01em',
         }}>↺ Regenerate</button>
       </div>
     )
@@ -505,68 +666,77 @@ function GenerationBanner({
   if (isRunning && progress) {
     return (
       <div style={{
-        background: 'linear-gradient(135deg, #EFF6FF, #F0F9FF)',
-        border: '1px solid #BAE6FD', borderRadius: 12,
-        padding: '10px 16px', flexShrink: 0, marginBottom: 12,
+        background: 'linear-gradient(135deg, rgba(79,70,229,0.07) 0%, rgba(99,102,241,0.04) 100%)',
+        border: '0.5px solid rgba(79,70,229,0.22)', borderRadius: 13,
+        padding: '11px 16px', flexShrink: 0, marginBottom: 10,
+        boxShadow: '0 1px 6px rgba(79,70,229,0.08)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
           <div style={{
-            width: 20, height: 20, borderRadius: '50%',
-            border: '2.5px solid #0EA5E9', borderTopColor: 'transparent',
+            width: 18, height: 18, borderRadius: '50%',
+            border: '2px solid #6366F1', borderTopColor: 'transparent',
             animation: 'spin 0.7s linear infinite', flexShrink: 0,
           }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#0369A1' }}>
-              Generating: {progress.phase}
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#3730A3', letterSpacing: '-0.01em' }}>
+              {progress.phase}
             </div>
-            <div style={{ fontSize: 11, color: '#0284C7', marginTop: 1 }}>
-              {progress.count.toLocaleString()} / {total.toLocaleString()} designs  ·  {progress.pct}%
+            <div style={{ fontSize: 10.5, color: '#6366F1', marginTop: 1 }}>
+              {progress.count.toLocaleString()} / {total.toLocaleString()}  ·  {progress.pct}%
             </div>
           </div>
           <button onClick={onCancel} style={{
-            height: 26, padding: '0 12px', fontSize: 11, fontWeight: 700,
-            border: '1px solid #BAE6FD', borderRadius: 7, background: '#fff',
-            color: '#0369A1', cursor: 'pointer', fontFamily: 'inherit',
+            height: 26, padding: '0 11px', fontSize: 10.5, fontWeight: 700,
+            border: '0.5px solid rgba(99,102,241,0.3)', borderRadius: 7,
+            background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)',
+            color: '#4F46E5', cursor: 'pointer', fontFamily: 'inherit',
           }}>✕ Stop</button>
         </div>
-        {/* Progress bar */}
-        <div style={{ height: 6, background: '#E0F2FE', borderRadius: 99, overflow: 'hidden' }}>
+        <div style={{ height: 4, background: 'rgba(99,102,241,0.12)', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{
             height: '100%', borderRadius: 99,
-            background: 'linear-gradient(90deg, #0EA5E9, #38BDF8)',
+            background: 'linear-gradient(90deg, #6366F1, #8B5CF6, #A78BFA)',
             width: `${progress.pct}%`,
-            transition: 'width 0.3s ease',
+            transition: 'width 0.4s cubic-bezier(0.34,1.1,0.64,1)',
+            boxShadow: '0 0 8px rgba(99,102,241,0.6)',
           }} />
         </div>
       </div>
     )
   }
 
-  // Idle state — prompt to generate
+  // Idle state
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #F8FAFF, #F0F4FF)',
-      border: '1px solid #C7D2FE', borderRadius: 12,
-      padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12,
-      marginBottom: 12, flexShrink: 0,
+      background: 'linear-gradient(135deg, #0F0C29 0%, #1A1560 50%, #24243E 100%)',
+      border: '0.5px solid rgba(255,255,255,0.10)', borderRadius: 13,
+      padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14,
+      marginBottom: 10, flexShrink: 0,
+      boxShadow: '0 4px 20px rgba(79,70,229,0.22), inset 0 1px 0 rgba(255,255,255,0.06)',
     }}>
-      <div style={{ fontSize: 22 }}>🧬</div>
+      <div style={{
+        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+        background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 18, boxShadow: '0 4px 12px rgba(99,102,241,0.45)',
+      }}>⚗</div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#3730A3' }}>
-          10,000+ Design Algorithm Ready
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', letterSpacing: '-0.015em' }}>
+          10,000+ Generative Designs
         </div>
-        <div style={{ fontSize: 11, color: '#4F46E5', marginTop: 1 }}>
-          ~{estimate.toLocaleString()} unique designs via combinatorial weave logic (Research-derived)
+        <div style={{ fontSize: 10.5, color: 'rgba(199,199,255,0.6)', marginTop: 2 }}>
+          ~{estimate.toLocaleString()} unique weave combinations via research-based logic
         </div>
       </div>
       <button onClick={onStart} style={{
-        height: 34, padding: '0 18px', fontSize: 12.5, fontWeight: 800,
+        height: 33, padding: '0 16px', fontSize: 12, fontWeight: 800,
         border: 'none', borderRadius: 9,
-        background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+        background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
         color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
-        boxShadow: '0 4px 14px rgba(79,70,229,0.35)',
-        whiteSpace: 'nowrap',
-      }}>⚡ Generate 10k+</button>
+        boxShadow: '0 4px 14px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.15)',
+        whiteSpace: 'nowrap', letterSpacing: '-0.01em',
+        transition: 'all 0.18s ease',
+      }}>⚡ Generate</button>
     </div>
   )
 }
@@ -600,6 +770,7 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
   const [weightFilter, setWeightFilter] = useState('')
   const [sortBy, setSortBy] = useState('popularity')
   const [showBookmarked, setShowBookmarked] = useState(false)
+  const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('all')
   const [showSimilarTo, setShowSimilarTo] = useState<string | null>(null)
 
   // ── UI ──
@@ -652,10 +823,17 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
     if (libTab === 'static') {
       return staticLib.designs.map((d, i) => staticToGen(d as SDesign, i))
     }
-    // Merge: mass > custom > presets (mass first for freshest on top)
+    // Merge: mass > custom > community > presets
     const massSet = new Set(massDesigns.map(d => d.full_code))
     const customFiltered = custom.filter(d => !massSet.has(d.full_code))
-    return [...massDesigns, ...customFiltered, ...genPresets]
+    // Deduplicate community designs against existing sets
+    const existingCodes = new Set([
+      ...massDesigns.map(d => d.full_code),
+      ...customFiltered.map(d => d.full_code),
+      ...genPresets.map(d => d.full_code),
+    ])
+    const communityFiltered = communityDesigns.filter(d => !existingCodes.has(d.full_code))
+    return [...massDesigns, ...customFiltered, ...communityFiltered, ...genPresets]
   }, [libTab, genPresets, custom, massDesigns])
 
   // ── Fabric types for sidebar ──
@@ -677,6 +855,20 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
         (d.params?.type === ref.params?.type || d.category === ref.category || d.fabric_type === ref.fabric_type)
       ).slice(0, 24)
     }
+
+    // ── Collection filter ──
+    if (collectionFilter === 'premium') {
+      data = data.filter(d => (d.popularity || 0) >= 70 && d.shaft_count >= 8)
+    } else if (collectionFilter === 'apple') {
+      const appleTypes = new Set(['plain', 'twill', 'hopsack', 'basket'])
+      const appleTags = new Set(['minimal', 'clean', 'structured', 'plain', 'simple', 'crisp'])
+      data = data.filter(d =>
+        (d.category === 'base_weaves' && d.repeat_rows <= 4) ||
+        appleTypes.has(d.params?.type || '') ||
+        (d.tags || []).some(t => appleTags.has(t.toLowerCase()))
+      )
+    }
+
     if (category !== 'all') data = data.filter(d => d.category === category)
     if (fabricFilter) data = data.filter(d => d.fabric_type === fabricFilter)
     if (weightFilter) data = data.filter(d => d.weight === weightFilter)
@@ -700,16 +892,16 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
     else if (sortBy === 'shafts_desc') data.sort((a, b) => b.shaft_count - a.shaft_count)
 
     return data
-  }, [allDesigns, search, category, fabricFilter, weightFilter, shaftRange, sortBy, showBookmarked, bookmarks, showSimilarTo])
+  }, [allDesigns, search, category, fabricFilter, weightFilter, shaftRange, sortBy, showBookmarked, bookmarks, showSimilarTo, collectionFilter])
 
   const paged = useMemo(() => filtered.slice(0, page * PAGE), [filtered, page])
   const hasMore = filtered.length > paged.length
-  const anyFilter = !!(search || fabricFilter || shaftRange || weightFilter || showBookmarked || showSimilarTo || category !== 'all')
+  const anyFilter = !!(search || fabricFilter || shaftRange || weightFilter || showBookmarked || showSimilarTo || category !== 'all' || collectionFilter !== 'all')
 
   const clearAll = () => {
     setSearch(''); setCategory('all'); setFabricFilter(''); setShaftRange('')
     setWeightFilter(''); setSortBy('popularity'); setShowBookmarked(false)
-    setShowSimilarTo(null); setPage(1)
+    setShowSimilarTo(null); setCollectionFilter('all'); setPage(1)
   }
 
   const handleRandom = () => {
@@ -745,13 +937,13 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
   const toggleBookmark = (id: string) =>
     setBookmarks(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
 
-  const CATEGORIES: { key: GenCategory; label: string; color: string }[] = [
-    { key: 'all', label: 'All', color: '#1E293B' },
-    { key: 'base_weaves', label: 'Base Weaves', color: '#4F46E5' },
-    { key: 'presets', label: 'Industry Presets', color: '#0891B2' },
-    { key: 'dobby', label: 'Dobby', color: '#7C3AED' },
-    { key: 'modifiers', label: 'Modifiers', color: '#D97706' },
-    { key: 'specialty', label: 'Specialty', color: '#DC2626' },
+  const CATEGORIES: { key: GenCategory; label: string; color: string; icon: string }[] = [
+    { key: 'all',         label: 'All',             color: '#1E293B', icon: '◈' },
+    { key: 'base_weaves', label: 'Base Weaves',      color: '#4F46E5', icon: '⊞' },
+    { key: 'presets',     label: 'Industry Presets', color: '#0891B2', icon: '⚙' },
+    { key: 'dobby',       label: 'Dobby',            color: '#7C3AED', icon: '⬡' },
+    { key: 'specialty',   label: 'Jacquard & Pile',  color: '#DC2626', icon: '✦' },
+    { key: 'modifiers',   label: 'Surface Motifs',   color: '#D97706', icon: '✿' },
   ]
 
   return (
@@ -768,35 +960,133 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
         padding: '14px 18px 10px', borderBottom: '1px solid rgba(0,0,0,0.06)',
         flexShrink: 0, background: '#fff',
       }}>
-        {/* Row 1 */}
+        {/* Row 1: Title + Collection Nav + Source toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#111', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1D1D1F', letterSpacing: '-0.025em' }}>
               Design Library
             </div>
-            <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
-              {filtered.length.toLocaleString()} / {allDesigns.length.toLocaleString()} designs
+            <div style={{ fontSize: 11, color: '#86868B', marginTop: 1 }}>
+              {filtered.length.toLocaleString()} / {allDesigns.length.toLocaleString()}
               {massDesigns.length > 0 && (
-                <span style={{ marginLeft: 6, color: '#4F46E5', fontWeight: 700 }}>
+                <span style={{ marginLeft: 5, color: '#4F46E5', fontWeight: 600 }}>
                   · {massDesigns.length.toLocaleString()} generated
                 </span>
               )}
-              {showSimilarTo && <span style={{ color: '#7C3AED', fontWeight: 700 }}> · Similar</span>}
+              {showSimilarTo && <span style={{ color: '#7C3AED', fontWeight: 600 }}> · Similar</span>}
             </div>
           </div>
+
           <div style={{ flex: 1 }} />
 
+          {/* ── Collection links — Apple frosted-glass segmented nav ── */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 2,
+            padding: '3px',
+            background: 'rgba(118,118,128,0.12)',
+            borderRadius: 10,
+            border: '0.5px solid rgba(0,0,0,0.07)',
+          }}>
+            {([
+              {
+                id: 'all' as CollectionFilter,
+                label: 'All',
+                icon: (
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <rect x="1" y="1" width="4.5" height="4.5" rx="1.2" fill="currentColor"/>
+                    <rect x="7.5" y="1" width="4.5" height="4.5" rx="1.2" fill="currentColor" opacity="0.55"/>
+                    <rect x="1" y="7.5" width="4.5" height="4.5" rx="1.2" fill="currentColor" opacity="0.55"/>
+                    <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1.2" fill="currentColor" opacity="0.3"/>
+                  </svg>
+                ),
+              },
+              {
+                id: 'premium' as CollectionFilter,
+                label: 'Premium',
+                icon: (
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M6.5 1L8.09 4.22L11.67 4.76L9.09 7.28L9.68 10.84L6.5 9.17L3.32 10.84L3.91 7.28L1.33 4.76L4.91 4.22L6.5 1Z"
+                      fill="currentColor" stroke="none"/>
+                  </svg>
+                ),
+              },
+              {
+                id: 'apple' as CollectionFilter,
+                label: 'Apple',
+                icon: (
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <rect x="1.5" y="3" width="10" height="1.8" rx="0.9" fill="currentColor"/>
+                    <rect x="1.5" y="5.6" width="7" height="1.8" rx="0.9" fill="currentColor" opacity="0.55"/>
+                    <rect x="1.5" y="8.2" width="5" height="1.8" rx="0.9" fill="currentColor" opacity="0.3"/>
+                  </svg>
+                ),
+              },
+            ] as const).map(({ id, label, icon }) => {
+              const active = collectionFilter === id
+              return (
+                <button
+                  key={id}
+                  onClick={() => { setCollectionFilter(id); setPage(1) }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '5px 12px',
+                    fontSize: 12.5,
+                    fontWeight: active ? 600 : 400,
+                    letterSpacing: '-0.012em',
+                    color: active ? '#1D1D1F' : '#86868B',
+                    background: active ? '#ffffff' : 'transparent',
+                    border: 'none',
+                    borderRadius: 7,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap' as const,
+                    transition: 'color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease',
+                    boxShadow: active
+                      ? '0 1px 4px rgba(0,0,0,0.13), 0 0.5px 1.5px rgba(0,0,0,0.09), inset 0 0.5px 0 rgba(255,255,255,1)'
+                      : 'none',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif',
+                    userSelect: 'none' as const,
+                  }}
+                >
+                  <span style={{
+                    lineHeight: 0, display: 'inline-flex', alignItems: 'center',
+                    color: active
+                      ? (id === 'premium' ? '#F59E0B' : id === 'apple' ? '#007AFF' : '#1D1D1F')
+                      : '#AEAEB2',
+                    transition: 'color 0.18s ease',
+                  }}>
+                    {icon}
+                  </span>
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+
           {/* Source toggle */}
-          <div style={{ display: 'flex', background: '#F1F5F9', padding: 2, borderRadius: 9 }}>
+          <div style={{
+            display: 'flex',
+            background: 'rgba(118,118,128,0.12)',
+            padding: 3, borderRadius: 9,
+            gap: 2,
+          }}>
             {(['generative', 'static'] as LibTab[]).map(t => (
               <button key={t} onClick={() => { setLibTab(t); clearAll() }} style={{
-                padding: '5px 12px', fontSize: 11.5, fontWeight: 700, border: 'none', borderRadius: 7,
-                cursor: 'pointer', background: libTab === t ? '#fff' : 'transparent',
-                color: libTab === t ? '#111' : '#64748B',
-                boxShadow: libTab === t ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.18s', textTransform: 'capitalize', fontFamily: 'inherit',
+                padding: '4px 11px', fontSize: 11.5, fontWeight: libTab === t ? 600 : 400,
+                letterSpacing: '-0.01em',
+                border: 'none', borderRadius: 7,
+                cursor: 'pointer',
+                background: libTab === t ? '#fff' : 'transparent',
+                color: libTab === t ? '#1D1D1F' : '#86868B',
+                boxShadow: libTab === t
+                  ? '0 1px 4px rgba(0,0,0,0.13), 0 0.5px 1px rgba(0,0,0,0.08)'
+                  : 'none',
+                transition: 'all 0.18s ease',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif',
+                userSelect: 'none' as const,
               }}>
-                {t === 'generative' ? '⚙ Generative' : '📚 Static'}
+                {t === 'generative' ? 'Generative' : 'Static'}
               </button>
             ))}
           </div>
@@ -827,11 +1117,45 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
           </button>
 
           {/* Random */}
-          <button onClick={handleRandom} style={{
-            height: 30, padding: '0 12px', fontSize: 12, fontWeight: 700, border: 'none', borderRadius: 8,
-            background: 'linear-gradient(135deg, #4F46E5, #0891B2)',
-            color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
-          }}>✨ Random</button>
+          <button 
+            onClick={handleRandom} 
+            className="random-btn-premium"
+            style={{
+              height: 32, padding: '0 16px', fontSize: 12.5, fontWeight: 800, border: 'none', borderRadius: 9,
+              background: 'linear-gradient(135deg, #6366F1 0%, #A855F7 100%)',
+              color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 6,
+              boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <style>{`
+              .random-btn-premium:hover {
+                transform: translateY(-2px) scale(1.05);
+                box-shadow: 0 6px 20px rgba(99,102,241,0.45);
+                filter: brightness(1.1);
+              }
+              .random-btn-premium:active {
+                transform: translateY(0) scale(0.98);
+              }
+              .random-btn-premium::after {
+                content: '';
+                position: absolute;
+                top: -50%; left: -50%; width: 200%; height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+                transform: rotate(45deg);
+                animation: shine-btn 3s infinite;
+              }
+              @keyframes shine-btn {
+                0% { transform: translateX(-100%) rotate(45deg); }
+                20%, 100% { transform: translateX(100%) rotate(45deg); }
+              }
+            `}</style>
+            <span style={{ fontSize: 14 }}>🪄</span>
+            <span>Inspire Me</span>
+          </button>
 
           {anyFilter && (
             <button onClick={clearAll} style={{
@@ -871,7 +1195,10 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
                   background: category === cat.key ? cat.color : '#F1F5F9',
                   color: category === cat.key ? '#fff' : '#64748B',
                   cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                }}>{cat.label}</button>
+                }}>
+                  <span style={{ marginRight: 4 }}>{cat.icon}</span>
+                  {cat.label}
+                </button>
               ))}
             </div>
           </>
