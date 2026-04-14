@@ -17,16 +17,14 @@ import SimulationAssistantUI from '@/components/analysis/SimulationAssistant'
 import DraftAnalysisTool from '@/components/analysis/DraftAnalysisTool'
 import WeftSequencePlan from '@/components/design/WeftSequencePlan'
 
-type DemoTab = 'Identity' | 'Warp' | 'Weft' | 'Loom' | 'Border' | 'AI Analysis' | 'Export'
+type DemoTab = 'Identity' | 'Warp' | 'Weft' | 'Loom' | 'Border'
 
-const NAV_TABS: { id: DemoTab; label: string; icon: string }[] = [
-  { id: 'Identity', label: 'Identity', icon: '🪡' },
-  { id: 'Warp',     label: 'Warp',     icon: '↕' },
-  { id: 'Weft',     label: 'Weft',     icon: '↔' },
-  { id: 'Loom',     label: 'Loom',     icon: '⚙' },
-  { id: 'Border',   label: 'Border',   icon: '◻' },
-  { id: 'AI Analysis', label: 'AI Analysis', icon: '🤖' },
-  { id: 'Export',   label: 'Export',   icon: '📤' },
+const NAV_TABS: { id: DemoTab; label: string }[] = [
+  { id: 'Identity', label: 'Identity' },
+  { id: 'Warp',     label: 'Warp'     },
+  { id: 'Weft',     label: 'Weft'     },
+  { id: 'Loom',     label: 'Loom'     },
+  { id: 'Border',   label: 'Border'   },
 ]
 
 export default function DemoPage() {
@@ -195,8 +193,8 @@ export default function DemoPage() {
           <div style={{
             display: 'flex',
             padding: '8px 10px',
-            gap: 2,
-            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            gap: 4,
+            borderBottom: '1px solid var(--border-light)',
             background: 'var(--surface)',
             flexShrink: 0,
             overflowX: 'auto',
@@ -228,13 +226,11 @@ export default function DemoPage() {
 
           {/* Sidebar Content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px' }}>
-            {activeTab === 'Identity'       && <IdentityForm />}
-            {activeTab === 'Warp'           && <WarpSystemForm />}
-            {activeTab === 'Weft'           && <WeftForm />}
-            {activeTab === 'Loom'           && <LoomForm />}
-            {activeTab === 'Border'         && <BorderForm />}
-            {activeTab === 'AI Analysis'    && <SimulationAssistantUI />}
-            {activeTab === 'Export'         && <MachineExportPanel />}
+            {activeTab === 'Identity'  && <IdentityForm />}
+            {activeTab === 'Warp'      && <WarpSystemForm />}
+            {activeTab === 'Weft'      && <WeftForm />}
+            {activeTab === 'Loom'      && <LoomForm />}
+            {activeTab === 'Border'    && <BorderForm />}
           </div>
         </div>
 
