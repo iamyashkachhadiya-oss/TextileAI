@@ -715,7 +715,7 @@ function GenerationBanner({
     }}>
       <div style={{
         width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-        background: 'linear-gradient(135deg, #1E90FF, #FF6B35)',
+        background: 'linear-gradient(135deg, #1E90FF, #3B82F6)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round">
@@ -733,7 +733,7 @@ function GenerationBanner({
       <button onClick={onStart} style={{
         height: 30, padding: '0 14px', fontSize: 11.5, fontWeight: 700,
         border: 'none', borderRadius: 8,
-        background: 'linear-gradient(135deg, #1E90FF 0%, #FF6B35 100%)',
+        background: 'linear-gradient(135deg, #1E90FF 0%, #3B82F6 100%)',
         color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
         whiteSpace: 'nowrap', letterSpacing: '-0.01em',
         transition: 'all 0.18s ease',
@@ -1062,15 +1062,15 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
             onClick={handleRandom}
             style={{
               height: 32, padding: '0 14px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 9,
-              background: 'linear-gradient(135deg, #FF6B35 0%, #1E90FF 100%)',
+              background: 'linear-gradient(135deg, #3B82F6 0%, #1E90FF 100%)',
               color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 6,
-              boxShadow: '0 2px 10px rgba(255,107,53,0.25)',
+              boxShadow: '0 2px 10px rgba(30,144,255,0.25)',
               transition: 'all 0.18s ease',
               whiteSpace: 'nowrap' as const,
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 5px 16px rgba(255,107,53,0.35)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 10px rgba(255,107,53,0.25)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 5px 16px rgba(30,144,255,0.35)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 10px rgba(30,144,255,0.25)' }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>

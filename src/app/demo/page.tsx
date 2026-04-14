@@ -97,9 +97,9 @@ export default function DemoPage() {
             />
             <div>
               <div style={{
-                fontSize: 17, fontWeight: 800,
+                fontSize: 15, fontWeight: 800,
                 letterSpacing: '-0.04em', lineHeight: 1.1,
-                background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D7E 50%, #06D6AA 100%)',
+                background: 'linear-gradient(135deg, #1E90FF 0%, #3B82F6 50%, #06D6AA 100%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -125,7 +125,7 @@ export default function DemoPage() {
             padding: '3px 9px',
             fontSize: 10, fontWeight: 700,
             color: '#fff',
-            background: 'linear-gradient(135deg, #FF6B35, #FF4D7E)',
+            background: 'linear-gradient(135deg, #1E90FF, #3B82F6)',
             borderRadius: 99,
             letterSpacing: '0.04em',
             textTransform: 'uppercase',
@@ -136,14 +136,14 @@ export default function DemoPage() {
             onClick={() => import('@/components/outputs/PDFExport').then(m => m.downloadPDF())}
             style={{
               height: 32, padding: '0 12px',
-              background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D7E 60%, #06D6AA 100%)',
+              background: 'linear-gradient(135deg, #1E90FF 0%, #3B82F6 60%, #06D6AA 100%)',
               color: '#fff', border: 'none',
               borderRadius: 8, cursor: 'pointer',
               fontSize: 12, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 5,
               letterSpacing: '-0.01em',
               transition: 'all 0.18s ease',
-              boxShadow: '0 2px 10px rgba(255,77,126,0.30)',
+              boxShadow: '0 2px 10px rgba(30,144,255,0.30)',
               whiteSpace: 'nowrap' as const,
             }}
           >
