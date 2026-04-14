@@ -118,7 +118,7 @@ function CopyBtn({ text, label = 'Copy' }: { text: string; label?: string }) {
 // ─── Design Card ─────────────────────────────────────────────────────────────
 const CAT_META: Record<string, { color: string; label: string; glow: string }> = {
   base_weaves: { color: '#5856D6', label: 'Base',      glow: 'rgba(88,86,214,0.35)' },
-  presets:     { color: '#007AFF', label: 'Preset',    glow: 'rgba(0,122,255,0.35)' },
+  presets:     { color: '#E0115F', label: 'Preset',    glow: 'rgba(224,17,95,0.35)' },
   dobby:       { color: '#AF52DE', label: 'Dobby',     glow: 'rgba(175,82,222,0.35)' },
   specialty:   { color: '#FF3B30', label: 'Specialty', glow: 'rgba(255,59,48,0.35)' },
   modifiers:   { color: '#FF9500', label: 'Modifier',  glow: 'rgba(255,149,0,0.35)' },
@@ -319,10 +319,10 @@ function DesignModal({ design, onClose, onLoad, onSimilar, bookmarked, onBookmar
   }
 
   const catColor: Record<string, string> = {
-    base_weaves: '#4F46E5', presets: '#0891B2', dobby: '#7C3AED',
-    specialty: '#DC2626', modifiers: '#D97706',
+    base_weaves: '#C00E52', presets: '#E0115F', dobby: '#E0115F',
+    specialty: '#E0115F', modifiers: '#E0115F',
   }
-  const accent = catColor[design.category || 'presets'] || '#4F46E5'
+  const accent = catColor[design.category || 'presets'] || '#C00E52'
 
   const specs = [
     { label: 'Weave Type', value: design.params?.type?.replace('_', ' ') },
@@ -666,22 +666,22 @@ function GenerationBanner({
   if (isRunning && progress) {
     return (
       <div style={{
-        background: 'linear-gradient(135deg, rgba(79,70,229,0.07) 0%, rgba(99,102,241,0.04) 100%)',
-        border: '0.5px solid rgba(79,70,229,0.22)', borderRadius: 13,
+        background: 'linear-gradient(135deg, rgba(192,14,82,0.07) 0%, rgba(99,102,241,0.04) 100%)',
+        border: '0.5px solid rgba(192,14,82,0.22)', borderRadius: 13,
         padding: '11px 16px', flexShrink: 0, marginBottom: 10,
-        boxShadow: '0 1px 6px rgba(79,70,229,0.08)',
+        boxShadow: '0 1px 6px rgba(192,14,82,0.08)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
           <div style={{
             width: 18, height: 18, borderRadius: '50%',
-            border: '2px solid #6366F1', borderTopColor: 'transparent',
+            border: '2px solid #C00E52', borderTopColor: 'transparent',
             animation: 'spin 0.7s linear infinite', flexShrink: 0,
           }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11.5, fontWeight: 800, color: '#3730A3', letterSpacing: '-0.01em' }}>
               {progress.phase}
             </div>
-            <div style={{ fontSize: 10.5, color: '#6366F1', marginTop: 1 }}>
+            <div style={{ fontSize: 10.5, color: '#C00E52', marginTop: 1 }}>
               {progress.count.toLocaleString()} / {total.toLocaleString()}  ·  {progress.pct}%
             </div>
           </div>
@@ -689,13 +689,13 @@ function GenerationBanner({
             height: 26, padding: '0 11px', fontSize: 10.5, fontWeight: 600,
             border: '0.5px solid rgba(99,102,241,0.3)', borderRadius: 7,
             background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)',
-            color: '#4F46E5', cursor: 'pointer', fontFamily: 'inherit',
+            color: '#C00E52', cursor: 'pointer', fontFamily: 'inherit',
           }}>Stop</button>
         </div>
         <div style={{ height: 4, background: 'rgba(99,102,241,0.12)', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{
             height: '100%', borderRadius: 99,
-            background: 'linear-gradient(90deg, #6366F1, #8B5CF6, #A78BFA)',
+            background: 'linear-gradient(90deg, #C00E52, #E0115F, #A78BFA)',
             width: `${progress.pct}%`,
             transition: 'width 0.4s cubic-bezier(0.34,1.1,0.64,1)',
             boxShadow: '0 0 8px rgba(99,102,241,0.6)',
@@ -942,10 +942,10 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
   const CATEGORIES: { key: GenCategory; label: string; color: string }[] = [
     { key: 'all',         label: 'All',             color: '#1E293B' },
     { key: 'base_weaves', label: 'Base Weaves',      color: '#E0115F' },
-    { key: 'presets',     label: 'Industry Presets', color: '#0891B2' },
-    { key: 'dobby',       label: 'Dobby',            color: '#7C3AED' },
-    { key: 'specialty',   label: 'Jacquard & Pile',  color: '#DC2626' },
-    { key: 'modifiers',   label: 'Surface Motifs',   color: '#D97706' },
+    { key: 'presets',     label: 'Industry Presets', color: '#E0115F' },
+    { key: 'dobby',       label: 'Dobby',            color: '#E0115F' },
+    { key: 'specialty',   label: 'Jacquard & Pile',  color: '#E0115F' },
+    { key: 'modifiers',   label: 'Surface Motifs',   color: '#E0115F' },
   ]
 
   return (
@@ -971,11 +971,11 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
             <div style={{ fontSize: 11, color: '#86868B', marginTop: 1 }}>
               {filtered.length.toLocaleString()} / {allDesigns.length.toLocaleString()}
               {massDesigns.length > 0 && (
-                <span style={{ marginLeft: 5, color: '#4F46E5', fontWeight: 600 }}>
+                <span style={{ marginLeft: 5, color: '#C00E52', fontWeight: 600 }}>
                   · {massDesigns.length.toLocaleString()} generated
                 </span>
               )}
-              {showSimilarTo && <span style={{ color: '#7C3AED', fontWeight: 600 }}> · Similar</span>}
+              {showSimilarTo && <span style={{ color: '#E0115F', fontWeight: 600 }}> · Similar</span>}
             </div>
           </div>
 
@@ -1052,7 +1052,7 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
             {bookmarks.size > 0 && (
-              <span style={{ background: '#D97706', color: '#fff', fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 99 }}>
+              <span style={{ background: '#E0115F', color: '#fff', fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 99 }}>
                 {bookmarks.size}
               </span>
             )}
@@ -1082,7 +1082,7 @@ export default function DesignLibrary({ onLoadDesign }: { onLoadDesign?: () => v
           {anyFilter && (
             <button onClick={clearAll} style={{
               height: 30, padding: '0 10px', fontSize: 12, fontWeight: 600, borderRadius: 8, border: 'none',
-              background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', fontFamily: 'inherit',
+              background: '#FEF2F2', color: '#E0115F', cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 5,
             }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

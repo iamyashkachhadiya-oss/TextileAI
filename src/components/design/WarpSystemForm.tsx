@@ -215,8 +215,8 @@ export default function WarpSystemForm() {
         onClick={addWarpYarn}
         style={{
           width: '100%', height: 42,
-          background: 'rgba(0,122,255,0.07)',
-          border: '1.5px dashed rgba(0,122,255,0.25)',
+          background: 'rgba(224,17,95,0.07)',
+          border: '1.5px dashed rgba(224,17,95,0.25)',
           borderRadius: 12, color: 'var(--accent)',
           fontSize: 13, fontWeight: 600,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
@@ -225,12 +225,12 @@ export default function WarpSystemForm() {
           letterSpacing: '-0.01em',
         }}
         onMouseEnter={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,122,255,0.12)'
-          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,122,255,0.40)'
+          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(224,17,95,0.12)'
+          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(224,17,95,0.40)'
         }}
         onMouseLeave={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,122,255,0.07)'
-          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,122,255,0.25)'
+          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(224,17,95,0.07)'
+          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(224,17,95,0.25)'
         }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

@@ -49,7 +49,7 @@ export async function downloadPDF() {
     return Array.from({ length: numEnds }, (_, endIdx) => {
       const filled = draftSeq[endIdx] === shaft
       return `<rect x="${endIdx * cellPx}" y="${shaftIdx * cellPx}" width="${cellPx - 1}" height="${cellPx - 1}" rx="1"
-        fill="${filled ? '#007AFF' : 'none'}" stroke="#C8C8CC" stroke-width="0.5"/>`
+        fill="${filled ? '#E0115F' : 'none'}" stroke="#C8C8CC" stroke-width="0.5"/>`
     }).join('')
   }).join('')
   const draftSVGW = numEnds   * cellPx
@@ -62,7 +62,7 @@ export async function downloadPDF() {
       .filter(x => x.s === shaft)
       .map(x => x.e)
     return ends.length
-      ? `<tr><td style="font-family:monospace;font-size:9px;padding:2px 6px;border-bottom:1px solid #BFDBFF;color:#007AFF;"><strong>S${shaft}</strong> → ${ends.join(', ')}</td></tr>`
+      ? `<tr><td style="font-family:monospace;font-size:9px;padding:2px 6px;border-bottom:1px solid #BFDBFF;color:#E0115F;"><strong>S${shaft}</strong> → ${ends.join(', ')}</td></tr>`
       : `<tr><td style="font-family:monospace;font-size:9px;padding:2px 6px;color:#C7C7CC;">S${shaft} → —</td></tr>`
   }).join('')
 
@@ -214,18 +214,18 @@ export async function downloadPDF() {
     /* ── HEADER ── */
     .brand-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1.5px solid #1D1D1F;margin-bottom:12px;}
     .brand-wordmark{font-size:18px;font-weight:800;letter-spacing:-0.04em;color:#1D1D1F;}
-    .brand-wordmark span{color:#007AFF;}
+    .brand-wordmark span{color:#E0115F;}
     .brand-tagline{font-size:8px;color:#8E8E93;letter-spacing:.12em;text-transform:uppercase;margin-top:1px;}
     .doc-meta{text-align:right;font-size:9px;color:#8E8E93;line-height:1.6;}
     .doc-meta strong{color:#1D1D1F;font-size:11px;font-weight:700;}
     /* ── SECTION HEADERS ── */
-    .sec-label{font-size:8px;font-weight:700;color:#007AFF;text-transform:uppercase;letter-spacing:.1em;margin:10px 0 4px;border-left:2px solid #007AFF;padding-left:5px;}
+    .sec-label{font-size:8px;font-weight:700;color:#E0115F;text-transform:uppercase;letter-spacing:.1em;margin:10px 0 4px;border-left:2px solid #E0115F;padding-left:5px;}
     /* ── TWO-COL SPEC GRID ── */
     .spec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
     .spec-card{background:#F9F9FB;border-radius:6px;padding:6px 10px;}
     .spec-key{font-size:8px;color:#8E8E93;font-weight:500;}
     .spec-val{font-size:12px;font-weight:700;color:#1D1D1F;margin-top:1px;}
-    .spec-val.accent{color:#007AFF;}
+    .spec-val.accent{color:#E0115F;}
     /* ── TABLES ── */
     table{width:100%;border-collapse:collapse;}
     th{font-size:8px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;padding:4px 6px;border-bottom:1px solid #E5E5EA;text-align:left;}
@@ -236,7 +236,7 @@ export async function downloadPDF() {
     .page-footer{position:absolute;bottom:9mm;left:14mm;right:14mm;font-size:8px;color:#C7C7CC;display:flex;justify-content:space-between;border-top:1px solid #F2F2F7;padding-top:4px;}
     /* ── PILL BADGE ── */
     .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:8px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
-    .badge-blue{background:#EAF3FF;color:#007AFF;}
+    .badge-blue{background:#EAF3FF;color:#E0115F;}
     .badge-green{background:#E8F9EE;color:#34C759;}
     @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.page{page-break-after:always;}}
   </style>
@@ -307,7 +307,7 @@ export async function downloadPDF() {
   <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
     ${[
       ['GSM', calcOutputs.gsm.toFixed(1), '#FF9500'],
-      ['Linear Wt', `${calcOutputs.linear_meter_weight_g.toFixed(1)} g/m`, '#007AFF'],
+      ['Linear Wt', `${calcOutputs.linear_meter_weight_g.toFixed(1)} g/m`, '#E0115F'],
       ['Total Ends', (calcOutputs.total_warp_ends + borderEnds).toLocaleString() + (borderEnds > 0 ? ` (${borderEnds}B+${calcOutputs.total_warp_ends}Bd)` : ''), '#34C759'],
       ['Production', `${calcOutputs.production_m_per_hr.toFixed(2)} m/hr`, '#AF52DE'],
       ['Cost/m', `$${calcOutputs.cost_per_meter.toFixed(2)}`, '#FF9500'],
@@ -394,7 +394,7 @@ export async function downloadPDF() {
       </div>
       <div style="margin-top:3px;font-size:8px;color:#8E8E93;">
         ${numShafts} shafts × ${numEnds} ends
-        &nbsp;·&nbsp; <span style="color:#007AFF;">■</span> = End threaded on shaft
+        &nbsp;·&nbsp; <span style="color:#E0115F;">■</span> = End threaded on shaft
       </div>
     </div>
   </div>
@@ -431,16 +431,16 @@ ${borderShaftsUsed > 0 ? `
       <div style="font-size:8px;color:#EA580C;font-weight:600;text-transform:uppercase;">Border Reserved</div>
       <div style="font-size:22px;font-weight:800;color:#C2410C;margin-top:3px;">${borderShaftsUsed}</div>
     </div>
-    <div style="background:${borderShaftsUsed > shaftCount ? '#FEF2F2' : '#EAF3FF'};border-radius:8px;padding:10px 12px;border-top:2px solid ${borderShaftsUsed > shaftCount ? '#EF4444' : '#007AFF'};">
-      <div style="font-size:8px;color:${borderShaftsUsed > shaftCount ? '#EF4444' : '#007AFF'};font-weight:600;text-transform:uppercase;">Body Budget</div>
-      <div style="font-size:22px;font-weight:800;color:${borderShaftsUsed > shaftCount ? '#DC2626' : '#007AFF'};margin-top:3px;">${Math.max(0, shaftCount - borderShaftsUsed)}</div>
+    <div style="background:${borderShaftsUsed > shaftCount ? '#FEF2F2' : '#EAF3FF'};border-radius:8px;padding:10px 12px;border-top:2px solid ${borderShaftsUsed > shaftCount ? '#EF4444' : '#E0115F'};">
+      <div style="font-size:8px;color:${borderShaftsUsed > shaftCount ? '#EF4444' : '#E0115F'};font-weight:600;text-transform:uppercase;">Body Budget</div>
+      <div style="font-size:22px;font-weight:800;color:${borderShaftsUsed > shaftCount ? '#E0115F' : '#E0115F'};margin-top:3px;">${Math.max(0, shaftCount - borderShaftsUsed)}</div>
     </div>
   </div>
 
   <!-- Shaft budget bar -->
   <div style="height:14px;border-radius:7px;overflow:hidden;background:#E5E5EA;display:flex;margin-bottom:6px;">
     <div style="width:${Math.min((borderShaftsUsed/shaftCount)*100,100)}%;background:#EA580C;border-radius:7px 0 0 7px;"></div>
-    <div style="flex:1;background:#007AFF;opacity:0.3;"></div>
+    <div style="flex:1;background:#E0115F;opacity:0.3;"></div>
   </div>
   <div style="display:flex;justify-content:space-between;font-size:8px;color:#8E8E93;margin-bottom:14px;">
     <span>🧵 Border: ${borderShaftsUsed} shafts (${Math.round((borderShaftsUsed/shaftCount)*100)}%)</span>
@@ -448,7 +448,7 @@ ${borderShaftsUsed > 0 ? `
   </div>
 
   ${borderShaftsUsed > shaftCount ? `
-  <div style="padding:10px 14px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;font-size:10px;color:#DC2626;font-weight:600;margin-bottom:12px;">
+  <div style="padding:10px 14px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;font-size:10px;color:#E0115F;font-weight:600;margin-bottom:12px;">
     ❌ Border requires ${borderShaftsUsed} shafts but loom only has ${shaftCount}. Reduce border complexity or increase shaft count.
   </div>` : `
   <div style="padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:10px;color:#166534;margin-bottom:12px;">
@@ -466,16 +466,16 @@ ${borderShaftsUsed > 0 ? `
       <div style="font-size:8px;color:#EA580C;font-weight:600;text-transform:uppercase;">Border Ends</div>
       <div style="font-size:20px;font-weight:800;color:#C2410C;margin-top:3px;">${borderEnds.toLocaleString()}</div>
     </div>
-    <div style="background:#EAF3FF;border-radius:8px;padding:10px 12px;border-top:2px solid #007AFF;">
-      <div style="font-size:8px;color:#007AFF;font-weight:600;text-transform:uppercase;">Body Ends</div>
-      <div style="font-size:20px;font-weight:800;color:#007AFF;margin-top:3px;">${calcOutputs.total_warp_ends.toLocaleString()}</div>
+    <div style="background:#EAF3FF;border-radius:8px;padding:10px 12px;border-top:2px solid #E0115F;">
+      <div style="font-size:8px;color:#E0115F;font-weight:600;text-transform:uppercase;">Body Ends</div>
+      <div style="font-size:20px;font-weight:800;color:#E0115F;margin-top:3px;">${calcOutputs.total_warp_ends.toLocaleString()}</div>
     </div>
   </div>
 
   <!-- Warp layout visual bar -->
   <div style="height:32px;border-radius:8px;overflow:hidden;display:flex;border:1px solid #E5E5EA;margin-bottom:6px;">
-    <div style="width:${(borderEnds/(calcOutputs.total_warp_ends+borderEnds)/2*100).toFixed(1)}%;background:#EFF6FF;border-right:2px solid #007AFF;display:flex;align-items:center;justify-content:center;">
-      <span style="font-size:8px;font-weight:700;color:#007AFF;">L</span>
+    <div style="width:${(borderEnds/(calcOutputs.total_warp_ends+borderEnds)/2*100).toFixed(1)}%;background:#EFF6FF;border-right:2px solid #E0115F;display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:8px;font-weight:700;color:#E0115F;">L</span>
     </div>
     <div style="flex:1;background:repeating-linear-gradient(45deg,#F0F0F5,#F0F0F5 3px,#fff 3px,#fff 7px);display:flex;align-items:center;justify-content:center;">
       <span style="font-size:9px;font-weight:600;color:#8E8E93;background:rgba(255,255,255,0.85);padding:2px 8px;border-radius:4px;">Body ${calcOutputs.total_warp_ends.toLocaleString()} ends</span>
@@ -520,7 +520,7 @@ ${borderShaftsUsed > 0 ? `
     <div class="doc-meta">
       <strong>${identity.design_name || '—'}</strong><br>
       ${identity.design_number || '—'}
-      ${sim ? `&nbsp;·&nbsp; <span style="color:#007AFF;font-weight:700;text-transform:capitalize;">${sim.archetype}</span>` : ''}
+      ${sim ? `&nbsp;·&nbsp; <span style="color:#E0115F;font-weight:700;text-transform:capitalize;">${sim.archetype}</span>` : ''}
     </div>
   </div>
 
@@ -606,7 +606,7 @@ ${borderShaftsUsed > 0 ? `
   <div style="margin-top:12px;background:#F9F9FB;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
     <div>
       <div style="font-size:8px;font-weight:600;color:#8E8E93;text-transform:uppercase;">Estimated Cost / Linear Metre</div>
-      <div style="font-size:22px;font-weight:800;color:#007AFF;letter-spacing:-0.03em;">$${calcOutputs.cost_per_meter.toFixed(2)}</div>
+      <div style="font-size:22px;font-weight:800;color:#E0115F;letter-spacing:-0.03em;">$${calcOutputs.cost_per_meter.toFixed(2)}</div>
     </div>
     <div style="font-size:9px;color:#8E8E93;text-align:right;line-height:1.7;">
       Warp ${calcOutputs.warp_weight_per_100m_g.toFixed(0)} g/100m<br>

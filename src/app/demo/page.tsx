@@ -202,7 +202,7 @@ export default function DemoPage() {
                   fontWeight: activeTab === id ? 700 : 500,
                   color: activeTab === id ? 'var(--accent)' : 'var(--text-3)',
                   background: activeTab === id ? 'var(--accent-light)' : 'transparent',
-                  border: activeTab === id ? '1px solid rgba(6,214,170,0.2)' : '1px solid transparent',
+                  border: activeTab === id ? '1px solid rgba(224,17,95,0.2)' : '1px solid transparent',
                   borderRadius: 8,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
@@ -363,7 +363,7 @@ export default function DemoPage() {
               }}>
                 <div style={{
                   width: 56, height: 56, borderRadius: 16,
-                  background: 'linear-gradient(145deg, #007AFF22, #007AFF44)',
+                  background: 'linear-gradient(145deg, #E0115F22, #E0115F44)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 26,
                 }}>
@@ -448,7 +448,7 @@ export default function DemoPage() {
                             border: 'none', borderRadius: 7,
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
-                            boxShadow: active ? '0 1px 6px rgba(0,122,255,0.30)' : 'none',
+                            boxShadow: active ? '0 1px 6px rgba(224,17,95,0.30)' : 'none',
                             letterSpacing: '-0.02em',
                           }}
                         >

@@ -108,10 +108,10 @@ export default function LoomForm() {
           {WEAVE_MODIFIERS[loom.weave_type] && (
             <div style={{
               marginTop: 7, padding: '8px 11px',
-              background: 'rgba(0,122,255,0.05)',
+              background: 'rgba(224,17,95,0.05)',
               borderRadius: 8,
               fontSize: 11, color: 'var(--text-3)', lineHeight: 1.5,
-              border: '1px solid rgba(0,122,255,0.10)',
+              border: '1px solid rgba(224,17,95,0.10)',
             }}>
               {WEAVE_MODIFIERS[loom.weave_type].hint}
             </div>

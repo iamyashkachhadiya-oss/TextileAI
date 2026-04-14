@@ -200,7 +200,7 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
                           transition: 'width 0.4s',
                         }} />
                       )}
-                      <div style={{ flex: 1, background: '#007AFF', opacity: 0.25 }} />
+                      <div style={{ flex: 1, background: '#E0115F', opacity: 0.25 }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
                       <span style={{ fontSize: 11, color: '#EA580C', fontWeight: 600 }}>
@@ -221,7 +221,7 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
                       { label: 'Border Reserved', value: store.borderShaftsUsed, color: '#C2410C', bg: '#FFF7ED' },
                       { label: 'Body Budget', value: Math.max(0, store.shaftCount - store.borderShaftsUsed),
                         color: store.borderShaftsUsed > store.shaftCount ? 'var(--red)' : 'var(--accent)',
-                        bg: store.borderShaftsUsed > store.shaftCount ? '#FEF2F2' : 'rgba(0,122,255,0.06)' },
+                        bg: store.borderShaftsUsed > store.shaftCount ? '#FEF2F2' : 'rgba(224,17,95,0.06)' },
                     ].map(({ label, value, color, bg }) => (
                       <div key={label} style={{ background: bg, border: '1px solid var(--border-light)',
                         borderRadius: 12, padding: '12px 14px' }}>
@@ -271,11 +271,11 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
                         border: '1px solid var(--border-light)' }}>
                         <div style={{
                           width: `${(store.borderEnds / 2 / store.calcOutputs.total_warp_ends) * 100}%`,
-                          background: '#EFF6FF', borderRight: '2px solid #007AFF',
+                          background: '#EFF6FF', borderRight: '2px solid #E0115F',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           minWidth: 0,
                         }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#007AFF', whiteSpace: 'nowrap',
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#E0115F', whiteSpace: 'nowrap',
                             overflow: 'hidden', padding: '0 4px' }}>
                             L
                           </div>
@@ -305,7 +305,7 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
                         { label: 'Total Ends', value: store.calcOutputs.total_warp_ends.toLocaleString(), color: 'var(--text-1)', bg: 'var(--bg)' },
                         { label: 'Border Ends', value: store.borderEnds.toLocaleString(), color: '#C2410C', bg: '#FFF7ED' },
                         { label: 'Body Ends', value: (store.calcOutputs.total_warp_ends - store.borderEnds).toLocaleString(),
-                          color: 'var(--accent)', bg: 'rgba(0,122,255,0.06)' },
+                          color: 'var(--accent)', bg: 'rgba(224,17,95,0.06)' },
                       ].map(({ label, value, color, bg }) => (
                         <div key={label} style={{ background: bg, border: '1px solid var(--border-light)',
                           borderRadius: 10, padding: '9px 11px' }}>

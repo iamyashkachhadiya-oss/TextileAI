@@ -20,22 +20,22 @@ export interface ColorSwatch {
 }
 
 export const COLOR_SWATCHES: Record<string, ColorSwatch> = {
-  indigo:   { name: 'Indigo',    warp: '#3730A3', weft: '#EEF2FF', accent: '#4F46E5' },
+  indigo:   { name: 'Indigo',    warp: '#3730A3', weft: '#EEF2FF', accent: '#C00E52' },
   navy:     { name: 'Navy',      warp: '#1E3A5F', weft: '#DBEAFE', accent: '#1D4ED8' },
   white:    { name: 'White',     warp: '#FFFFFF', weft: '#F3F4F6', accent: '#9CA3AF' },
   black:    { name: 'Black',     warp: '#111827', weft: '#F9FAFB', accent: '#374151' },
   ecru:     { name: 'Ecru',      warp: '#C5B99A', weft: '#FBF7F0', accent: '#A8906B' },
   khaki:    { name: 'Khaki',     warp: '#8B7355', weft: '#F5F0E8', accent: '#6B5744' },
-  red:      { name: 'Red',       warp: '#DC2626', weft: '#FEF2F2', accent: '#B91C1C' },
+  red:      { name: 'Red',       warp: '#E0115F', weft: '#FEF2F2', accent: '#B91C1C' },
   blue:     { name: 'Blue',      warp: '#2563EB', weft: '#EFF6FF', accent: '#1D4ED8' },
   green:    { name: 'Green',     warp: '#15803D', weft: '#F0FDF4', accent: '#166534' },
   grey:     { name: 'Grey',      warp: '#6B7280', weft: '#F9FAFB', accent: '#374151' },
-  cream:    { name: 'Cream',     warp: '#FFFBEB', weft: '#FEF3C7', accent: '#D97706' },
+  cream:    { name: 'Cream',     warp: '#FFFBEB', weft: '#FEF3C7', accent: '#E0115F' },
   tan:      { name: 'Tan',       warp: '#D2B48C', weft: '#FBF7F0', accent: '#B8860B' },
-  burgundy: { name: 'Burgundy',  warp: '#7F1D1D', weft: '#FEF2F2', accent: '#991B1B' },
+  burgundy: { name: 'Burgundy',  warp: '#7F1D1D', weft: '#FEF2F2', accent: '#C00E52' },
   teal:     { name: 'Teal',      warp: '#0F766E', weft: '#F0FDFA', accent: '#0D9488' },
   natural:  { name: 'Natural',   warp: '#B5A585', weft: '#FAF8F4', accent: '#8B7355' },
-  multicolor: { name: 'Multi',   warp: '#7C3AED', weft: '#F5F3FF', accent: '#6D28D9' },
+  multicolor: { name: 'Multi',   warp: '#E0115F', weft: '#FFF1F0', accent: '#6D28D9' },
 }
 
 export const DEFAULT_COLORS = ['indigo', 'navy', 'white', 'black', 'ecru']

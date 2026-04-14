@@ -403,8 +403,8 @@ export default function WeftForm() {
         style={{
           marginTop: 12,
           width: '100%', height: 42,
-          background: 'rgba(0,122,255,0.06)',
-          border: '1.5px dashed rgba(0,122,255,0.22)',
+          background: 'rgba(224,17,95,0.06)',
+          border: '1.5px dashed rgba(224,17,95,0.22)',
           borderRadius: 12,
           color: 'var(--accent)',
           fontSize: 13, fontWeight: 600,
@@ -414,13 +414,13 @@ export default function WeftForm() {
         }}
         onMouseEnter={e => {
           const b = e.currentTarget as HTMLButtonElement
-          b.style.background = 'rgba(0,122,255,0.11)'
-          b.style.borderColor = 'rgba(0,122,255,0.38)'
+          b.style.background = 'rgba(224,17,95,0.11)'
+          b.style.borderColor = 'rgba(224,17,95,0.38)'
         }}
         onMouseLeave={e => {
           const b = e.currentTarget as HTMLButtonElement
-          b.style.background = 'rgba(0,122,255,0.06)'
-          b.style.borderColor = 'rgba(0,122,255,0.22)'
+          b.style.background = 'rgba(224,17,95,0.06)'
+          b.style.borderColor = 'rgba(224,17,95,0.22)'
         }}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

@@ -64,8 +64,8 @@ export default function CalcPanel() {
 
       {/* GSM — Hero Metric */}
       <div style={{
-        background: 'linear-gradient(135deg, #007AFF14 0%, #007AFF06 100%)',
-        border: '1px solid rgba(0,122,255,0.14)',
+        background: 'linear-gradient(135deg, #E0115F14 0%, #E0115F06 100%)',
+        border: '1px solid rgba(224,17,95,0.14)',
         borderRadius: 14,
         padding: '16px 16px',
       }}>
@@ -110,7 +110,7 @@ export default function CalcPanel() {
             </div>
             <div style={{
               background: borderShaftsUsed > shaftCount
-                ? '#FEF2F2' : 'rgba(0,122,255,0.06)',
+                ? '#FEF2F2' : 'rgba(224,17,95,0.06)',
               border: `1px solid ${borderShaftsUsed > shaftCount ? '#FCA5A5' : 'var(--accent-ring)'}`,
               borderRadius: 10, padding: '9px 11px',
             }}>
@@ -141,7 +141,7 @@ export default function CalcPanel() {
                   {borderEnds.toLocaleString()}
                 </div>
               </div>
-              <div style={{ background: 'rgba(0,122,255,0.06)', border: '1px solid var(--accent-ring)',
+              <div style={{ background: 'rgba(224,17,95,0.06)', border: '1px solid var(--accent-ring)',
                 borderRadius: 10, padding: '9px 11px' }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--accent)',
                   textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>

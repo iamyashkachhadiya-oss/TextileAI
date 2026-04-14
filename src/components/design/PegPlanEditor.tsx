@@ -165,12 +165,12 @@ export default function PegPlanEditor({ shaftCount, onChange, initialText = '' }
           <div style={{ fontSize: 18 }}>{bodyShaftsOver ? '❌' : '✓'}</div>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700,
-              color: bodyShaftsOver ? '#DC2626' : '#166534' }}>
+              color: bodyShaftsOver ? '#E0115F' : '#166534' }}>
               {bodyShaftsOver
                 ? `Body peg plan exceeds shaft budget!`
                 : `Body shaft budget: ${bodyBudget} of ${shaftCount} shafts`}
             </div>
-            <div style={{ fontSize: 11, color: bodyShaftsOver ? '#DC2626' : '#15803D', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: bodyShaftsOver ? '#E0115F' : '#15803D', marginTop: 2 }}>
               Border Design has claimed {borderShaftsUsed} shaft{borderShaftsUsed !== 1 ? 's' : ''}.
               {' '}Body peg plan must only use shafts 1–{bodyBudget}.
             </div>
@@ -181,8 +181,8 @@ export default function PegPlanEditor({ shaftCount, onChange, initialText = '' }
               🧵 Border: {borderShaftsUsed}
             </div>
             <div style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99,
-              background: bodyShaftsOver ? '#FEE2E2' : 'rgba(0,122,255,0.1)',
-              color: bodyShaftsOver ? '#DC2626' : '#007AFF',
+              background: bodyShaftsOver ? '#FEE2E2' : 'rgba(224,17,95,0.1)',
+              color: bodyShaftsOver ? '#E0115F' : '#E0115F',
               fontWeight: 700, whiteSpace: 'nowrap' }}>
               ⬛ Body: {bodyBudget}
             </div>

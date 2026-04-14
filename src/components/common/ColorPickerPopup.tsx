@@ -13,9 +13,9 @@ interface ColorPickerPopupProps {
 
 const PRESETS = [
   // Row 1
-  '#E5E7EB', '#94A3B8', '#475569', '#334155', '#000000', '#FBBF24', '#F59E0B', '#1E3A8A', '#2563EB', '#6366F1',
+  '#E5E7EB', '#94A3B8', '#475569', '#334155', '#000000', '#FBBF24', '#F59E0B', '#1E3A8A', '#2563EB', '#C00E52',
   // Row 2
-  '#10B981', '#059669', '#065F46', '#8B5CF6', '#172554', '#38BDF8', '#0ea5e9', '#EF4444', '#B91C1C', '#C00E52'
+  '#10B981', '#059669', '#065F46', '#E0115F', '#172554', '#E0115F', '#0ea5e9', '#EF4444', '#B91C1C', '#C00E52'
 ]
 
 export default function ColorPickerPopup({ 
@@ -255,7 +255,7 @@ export default function ColorPickerPopup({
         }
         .preset-btn:hover { transform: scale(1.1); }
         .preset-btn.active { 
-          box-shadow: 0 0 0 2px #6366F1;
+          box-shadow: 0 0 0 2px #C00E52;
         }
         .preset-btn svg { width: 14px; height: 14px; }
 

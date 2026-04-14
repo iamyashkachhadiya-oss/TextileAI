@@ -152,7 +152,7 @@ export default function AuthPage() {
                 borderRadius: 'var(--radius)',
                 background: '#FEF2F2',
                 border: '1px solid #FECACA',
-                color: '#991B1B',
+                color: '#C00E52',
                 fontSize: 13,
               }}>
                 {error}

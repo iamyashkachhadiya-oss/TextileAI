@@ -18,7 +18,7 @@ const CELL_SIZE = 20
 const LABEL_MARGIN = 28
 const LOWERED_COLOR = '#FFFFFF'
 const GRID_COLOR = 'rgba(0,0,0,0.08)'
-const REPEAT_COLOR = '#007AFF'
+const REPEAT_COLOR = '#E0115F'
 const LABEL_COLOR = '#86868B'
 
 function hexToRgba(hex: string, alpha: number): string {

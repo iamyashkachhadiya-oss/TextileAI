@@ -50,7 +50,7 @@ function ParamGroup({ title, children }: { title: string; children: React.ReactN
 
 // ─── Mini SVG weave preview ───────────────────────────────────────────────────
 function WeavePreviewGrid({
-  matrix, cellPx = 8, accent = '#007AFF',
+  matrix, cellPx = 8, accent = '#E0115F',
 }: { matrix: WeaveMatrix; cellPx?: number; accent?: string }) {
   if (!matrix.length) return null
   const rows = matrix.length
@@ -80,7 +80,7 @@ function LiftingPlanGrid({ plan, maxRows = 20 }: { plan: number[][]; maxRows?: n
           <rect key={`${ri}-${ci}`}
             x={ci * cellPx} y={ri * cellPx}
             width={cellPx - 1} height={cellPx - 1} rx={2}
-            fill={c ? '#007AFF' : '#EEF0F5'} />
+            fill={c ? '#E0115F' : '#EEF0F5'} />
         )))}
       </svg>
       {plan.length > maxRows && (
@@ -114,7 +114,7 @@ function ShaftBudget({ borderShafts, totalShafts }: { borderShafts: number; tota
             transition: 'width 0.3s',
           }} />
         )}
-        <div style={{ flex: 1, background: over ? 'transparent' : '#007AFF', opacity: 0.3 }} />
+        <div style={{ flex: 1, background: over ? 'transparent' : '#E0115F', opacity: 0.3 }} />
       </div>
 
       {/* Labels */}
@@ -138,7 +138,7 @@ function ShaftBudget({ borderShafts, totalShafts }: { borderShafts: number; tota
           </div>
         </div>
         <div style={{
-          background: over ? '#FEE2E2' : 'rgba(0,122,255,0.06)',
+          background: over ? '#FEE2E2' : 'rgba(224,17,95,0.06)',
           border: `1px solid ${over ? '#FCA5A5' : 'var(--accent-ring)'}`,
           borderRadius: 8, padding: '7px 10px',
         }}>
@@ -180,7 +180,7 @@ function ValidationBadge({ errors }: { errors: ValidationError[] }) {
           padding: '8px 11px', borderRadius: 9,
           background: e.severity === 'error' ? '#FFF1F0' : '#FFFBEB',
           border: `1px solid ${e.severity === 'error' ? '#FCA5A5' : '#FDE68A'}`,
-          fontSize: 11.5, color: e.severity === 'error' ? '#991B1B' : '#92400E', lineHeight: 1.5,
+          fontSize: 11.5, color: e.severity === 'error' ? '#C00E52' : '#92400E', lineHeight: 1.5,
         }}>
           <span style={{ flexShrink: 0, marginTop: 1 }}>{e.severity === 'error' ? '❌' : '⚠️'}</span>
           <span>{e.message}</span>
@@ -383,25 +383,25 @@ function CrossBorderEditor({ crossBorders, onChange }: {
             JSON.stringify(p.matrix) === JSON.stringify(cb.weaveMatrix))
           return (
             <div key={cb.id} style={{
-              background: '#F5F3FF', border: '1px solid #DDD6FE',
+              background: '#FFF1F0', border: '1px solid #FCA5A5',
               borderRadius: 10, padding: 11,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#5B21B6' }}>Cross Border {idx + 1}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#C00E52' }}>Cross Border {idx + 1}</div>
                 <button onClick={() => remove(cb.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7C3AED', fontSize: 16, lineHeight: 1 }}>
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E0115F', fontSize: 16, lineHeight: 1 }}>
                   ×
                 </button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 9 }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: '#7C3AED', marginBottom: 4 }}>Start Pick</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: '#E0115F', marginBottom: 4 }}>Start Pick</div>
                   <input type="number" min={0} value={cb.startPickIndex}
                     onChange={e => update(cb.id, { startPickIndex: parseInt(e.target.value) || 0 })}
                     style={{ height: 32, fontSize: 12, borderRadius: 7 }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: '#7C3AED', marginBottom: 4 }}>Length (picks)</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: '#E0115F', marginBottom: 4 }}>Length (picks)</div>
                   <input type="number" min={1} value={cb.lengthPicks}
                     onChange={e => update(cb.id, { lengthPicks: parseInt(e.target.value) || 1 })}
                     style={{ height: 32, fontSize: 12, borderRadius: 7 }} />
@@ -409,19 +409,19 @@ function CrossBorderEditor({ crossBorders, onChange }: {
               </div>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 9,
-                background: 'rgba(255,255,255,0.7)', border: '1px solid #DDD6FE',
+                background: 'rgba(255,255,255,0.7)', border: '1px solid #FCA5A5',
                 borderRadius: 8, padding: '7px 10px',
               }}>
-                <WeavePreviewGrid matrix={cb.weaveMatrix} cellPx={7} accent="#7C3AED" />
+                <WeavePreviewGrid matrix={cb.weaveMatrix} cellPx={7} accent="#E0115F" />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#5B21B6' }}>{pe ? pe[1].name : 'Custom'}</div>
-                  <div style={{ fontSize: 10, color: '#7C3AED' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#C00E52' }}>{pe ? pe[1].name : 'Custom'}</div>
+                  <div style={{ fontSize: 10, color: '#E0115F' }}>
                     {cb.weaveMatrix.length}p × {cb.weaveMatrix[0]?.length ?? 0}e
                   </div>
                 </div>
                 <button onClick={() => setShowPicker(cb.id)} style={{
                   padding: '4px 9px', fontSize: 10, fontWeight: 600, borderRadius: 6,
-                  border: '1px solid #DDD6FE', background: '#fff', color: '#7C3AED', cursor: 'pointer',
+                  border: '1px solid #FCA5A5', background: '#fff', color: '#E0115F', cursor: 'pointer',
                 }}>Change</button>
               </div>
             </div>
@@ -430,8 +430,8 @@ function CrossBorderEditor({ crossBorders, onChange }: {
       </div>
       <button onClick={add} style={{
         width: '100%', padding: '9px 0', borderRadius: 9,
-        border: '1px dashed #C4B5FD', background: '#F5F3FF',
-        color: '#7C3AED', fontSize: 12, fontWeight: 600,
+        border: '1px dashed #FCA5A5', background: '#FFF1F0',
+        color: '#E0115F', fontSize: 12, fontWeight: 600,
         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
       }}>
         + Add Cross Border
@@ -475,9 +475,9 @@ function FabricLayoutBar({ leftEnabled, rightEnabled, leftZone, rightZone, total
         {leftEnabled && leftPct > 0 && (
           <div title={`Left Border: ${leftZone.widthEnds} ends`}
             style={{ width: `${leftPct}%`, background: '#EFF6FF',
-              borderRight: '2px solid #007AFF',
+              borderRight: '2px solid #E0115F',
               display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#007AFF',
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#E0115F',
               writingMode: leftPct < 8 ? 'vertical-rl' : 'initial', whiteSpace: 'nowrap' }}>
               {leftPct < 8 ? 'L' : `L ${leftZone.widthEnds}`}
             </div>
@@ -507,7 +507,7 @@ function FabricLayoutBar({ leftEnabled, rightEnabled, leftZone, rightZone, total
 
       {crossBorders.length > 0 && (
         <div style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', marginBottom: 4 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#E0115F', marginBottom: 4 }}>
             Cross Borders (weft direction)
           </div>
           <div style={{ display: 'flex', height: 14, background: '#F0F0F5',
@@ -519,7 +519,7 @@ function FabricLayoutBar({ leftEnabled, rightEnabled, leftZone, rightZone, total
                   position: 'absolute',
                   left: `${(cb.startPickIndex / tot) * 100}%`,
                   width: `${(cb.lengthPicks / tot) * 100}%`,
-                  height: '100%', background: '#7C3AED', opacity: 0.75,
+                  height: '100%', background: '#E0115F', opacity: 0.75,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }} title={`CB ${i + 1}: picks ${cb.startPickIndex}–${cb.startPickIndex + cb.lengthPicks}`}>
                   <div style={{ fontSize: 8, color: '#fff', fontWeight: 700 }}>P{i + 1}</div>
@@ -610,7 +610,7 @@ function CompiledOutputSection({ output }: { output: CompiledBorderOutput }) {
             {output.draftArray.map((s, i) => (
               <span key={i} style={{
                 display: 'inline-block', width: 22, textAlign: 'center',
-                color: ['#007AFF', '#34C759', '#FF3B30', '#D97706', '#7C3AED', '#0891B2'][s % 6],
+                color: ['#E0115F', '#34C759', '#FF3B30', '#E0115F', '#E0115F', '#E0115F'][s % 6],
                 fontWeight: 700,
               }}>
                 {s + 1}
@@ -631,12 +631,12 @@ function CompiledOutputSection({ output }: { output: CompiledBorderOutput }) {
             {output.pilotSequence.map((entry, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px', borderRadius: 9,
-                background: entry.cylinder === 'A' ? '#EFF6FF' : '#F5F3FF',
-                border: `1px solid ${entry.cylinder === 'A' ? '#BFDBFE' : '#DDD6FE'}`,
+                background: entry.cylinder === 'A' ? '#EFF6FF' : '#FFF1F0',
+                border: `1px solid ${entry.cylinder === 'A' ? '#BFDBFE' : '#FCA5A5'}`,
               }}>
                 <div style={{
                   width: 24, height: 24, borderRadius: 6,
-                  background: entry.cylinder === 'A' ? '#007AFF' : '#7C3AED',
+                  background: entry.cylinder === 'A' ? '#E0115F' : '#E0115F',
                   color: '#fff', fontSize: 11, fontWeight: 800,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>{entry.cylinder}</div>
@@ -833,7 +833,7 @@ export default function BorderForm() {
 
       {/* ── Border zones ─────────────────────────────────────────────────── */}
       <ParamGroup title="Border Zones">
-        <BorderZoneEditor label="Left Border" accent="#007AFF"
+        <BorderZoneEditor label="Left Border" accent="#E0115F"
           zone={leftZone} enabled={leftEnabled}
           onToggle={() => setLeftEnabled(v => !v)} onUpdate={setLeftZone} />
         <BorderZoneEditor label="Right Border" accent="#EA580C"
