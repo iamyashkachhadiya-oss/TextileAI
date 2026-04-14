@@ -98,7 +98,8 @@ export default function SimulationPreview({ matrix, warpColor, weftColor, design
 
             if (x >= totalW || y >= totalH) continue
 
-            // 1 = warp up (show warp color), 0 = weft up (show weft yarn color)
+            // In this specific CAD workflow, filling a peg (1) indicates WEFT is visible.
+            // 1 = Weft up (show weft color), 0 = Warp up (show warp color)
             let cellWeftColor = weftRowColor
             
             // Map the warp end 'c' to its corresponding shaft to look up the peg plan color overlay
@@ -111,7 +112,7 @@ export default function SimulationPreview({ matrix, warpColor, weftColor, design
               if (yarn) cellWeftColor = yarn.colour_hex
             }
             
-            ctx.fillStyle = matrix[r][c] === 1 ? warpHex : cellWeftColor
+            ctx.fillStyle = matrix[r][c] === 1 ? cellWeftColor : warpHex
             ctx.fillRect(x, y, cellSize, cellSize)
           }
         }

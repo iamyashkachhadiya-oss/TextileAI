@@ -17,15 +17,16 @@ import SimulationAssistantUI from '@/components/analysis/SimulationAssistant'
 import DraftAnalysisTool from '@/components/analysis/DraftAnalysisTool'
 import WeftSequencePlan from '@/components/design/WeftSequencePlan'
 
-type DemoTab = 'Identity' | 'Warp' | 'Weft' | 'Loom' | 'Border' | 'Weft Sequence' | 'AI Analysis' | 'Export'
+type DemoTab = 'Identity' | 'Warp' | 'Weft' | 'Loom' | 'Border' | 'AI Analysis' | 'Export'
 
 const NAV_TABS: { id: DemoTab; label: string; icon: string }[] = [
-  { id: 'Identity',      label: 'Identity',       icon: '🪡' },
-  { id: 'Warp',          label: 'Warp',           icon: '↕' },
-  { id: 'Weft',          label: 'Weft',           icon: '↔' },
-  { id: 'Loom',          label: 'Loom',           icon: '⚙' },
-  { id: 'Border',        label: 'Border',         icon: '◻' },
-  { id: 'Weft Sequence', label: 'Weft Seq',       icon: '🧵' },
+  { id: 'Identity', label: 'Identity', icon: '🪡' },
+  { id: 'Warp',     label: 'Warp',     icon: '↕' },
+  { id: 'Weft',     label: 'Weft',     icon: '↔' },
+  { id: 'Loom',     label: 'Loom',     icon: '⚙' },
+  { id: 'Border',   label: 'Border',   icon: '◻' },
+  { id: 'AI Analysis', label: 'AI Analysis', icon: '🤖' },
+  { id: 'Export',   label: 'Export',   icon: '📤' },
 ]
 
 export default function DemoPage() {
@@ -65,10 +66,10 @@ export default function DemoPage() {
         justifyContent: 'space-between',
         padding: '0 20px',
         height: 52,
-        background: 'rgba(255,255,255,0.80)',
+        background: 'rgba(255,255,255,0.88)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        borderBottom: '1px solid rgba(0,0,0,0.08)',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
         flexShrink: 0,
         zIndex: 100,
       }}>
@@ -89,21 +90,23 @@ export default function DemoPage() {
             ☰
           </button>
 
-          {/* Logo mark — matches PDF wordmark exactly */}
+          {/* Logo mark */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <img
               src="/fabricai-logo.png"
               alt="FabricAI"
               style={{ width: 34, height: 34, display: 'block', objectFit: 'contain' }}
             />
-            {/* Wordmark — same style as PDF brand-wordmark */}
             <div>
               <div style={{
                 fontSize: 17, fontWeight: 800,
                 letterSpacing: '-0.04em', lineHeight: 1.1,
-                color: '#1D1D1F',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D7E 50%, #06D6AA 100%)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
               }}>
-                Fabric<span style={{ color: '#007AFF' }}>AI</span> Studio
+                FabricAI Studio
               </div>
               <div style={{
                 fontSize: 8, fontWeight: 600,
@@ -122,9 +125,9 @@ export default function DemoPage() {
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{
             padding: '3px 9px',
-            fontSize: 10, fontWeight: 600,
-            color: 'var(--accent)',
-            background: 'var(--accent-light)',
+            fontSize: 10, fontWeight: 700,
+            color: '#fff',
+            background: 'linear-gradient(135deg, #FF6B35, #FF4D7E)',
             borderRadius: 99,
             letterSpacing: '0.04em',
             textTransform: 'uppercase',
@@ -135,21 +138,22 @@ export default function DemoPage() {
             onClick={() => import('@/components/outputs/PDFExport').then(m => m.downloadPDF())}
             style={{
               height: 32, padding: '0 14px',
-              background: 'var(--accent)',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D7E 60%, #06D6AA 100%)',
               color: '#fff', border: 'none',
               borderRadius: 8, cursor: 'pointer',
-              fontSize: 13, fontWeight: 500,
+              fontSize: 13, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 6,
               letterSpacing: '-0.01em',
-              transition: 'all 0.15s ease',
+              transition: 'all 0.18s ease',
+              boxShadow: '0 2px 10px rgba(255,77,126,0.30)',
             }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent-hover)'
-              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 14px rgba(0,122,255,0.30)'
+              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
+              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 6px 20px rgba(255,77,126,0.40)'
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent)'
-              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
+              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'
+              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 10px rgba(255,77,126,0.30)'
             }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -192,7 +196,7 @@ export default function DemoPage() {
             display: 'flex',
             padding: '8px 10px',
             gap: 2,
-            borderBottom: '1px solid var(--border-light)',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
             background: 'var(--surface)',
             flexShrink: 0,
             overflowX: 'auto',
@@ -205,10 +209,10 @@ export default function DemoPage() {
                   flex: 1,
                   padding: '6px 6px',
                   fontSize: 12,
-                  fontWeight: activeTab === id ? 600 : 500,
+                  fontWeight: activeTab === id ? 700 : 500,
                   color: activeTab === id ? 'var(--accent)' : 'var(--text-3)',
                   background: activeTab === id ? 'var(--accent-light)' : 'transparent',
-                  border: 'none',
+                  border: activeTab === id ? '1px solid rgba(6,214,170,0.2)' : '1px solid transparent',
                   borderRadius: 8,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
@@ -229,7 +233,6 @@ export default function DemoPage() {
             {activeTab === 'Weft'           && <WeftForm />}
             {activeTab === 'Loom'           && <LoomForm />}
             {activeTab === 'Border'         && <BorderForm />}
-            {activeTab === 'Weft Sequence'  && <WeftSequencePlan />}
             {activeTab === 'AI Analysis'    && <SimulationAssistantUI />}
             {activeTab === 'Export'         && <MachineExportPanel />}
           </div>
@@ -494,7 +497,12 @@ export default function DemoPage() {
               <DraftAnalysisTool />
             </div>
 
-            {/* ── 3. FABRIC SIMULATION ── */}
+            {/* ── 3. WEFT SEQUENCE PLAN ── */}
+            <div className="card">
+              <WeftSequencePlan />
+            </div>
+
+            {/* ── 4. FABRIC SIMULATION ── */}
             <div className="card">
               <div style={{ marginBottom: 18 }}>
                 <h3 style={{

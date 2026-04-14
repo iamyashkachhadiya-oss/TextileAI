@@ -1,0 +1,440 @@
+
+> fabricai-studio@1.0.0 dev
+> next dev
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.40:3000
+✓ Ready in 461ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/mac/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/mac/Desktop/TextileAI/package-lock.json
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+ GET / 200 in 569ms (next.js: 266ms, proxy.ts: 99ms, application-code: 205ms)
+ GET /demo 200 in 125ms (next.js: 37ms, proxy.ts: 11ms, application-code: 77ms)
+ GET / 200 in 307ms (next.js: 23ms, proxy.ts: 22ms, application-code: 262ms)
+ GET /demo 200 in 160ms (next.js: 28ms, proxy.ts: 37ms, application-code: 95ms)
+[browser] Uncaught TypeError: undefined is not an object (evaluating 'store.weaveMatrix.length')
+    at DemoPage (src/app/demo/page.tsx:506:42)
+  504 |               </div>
+  505 |               <SimulationExport
+> 506 |                 matrix={store.weaveMatrix.length > 0 ? store.weaveMatrix : store.pegPlanM...
+      |                                          ^
+  507 |                 warpColor={
+  508 |                   store.warpSystem.yarns[0]?.colour_hex ||
+  509 |                   store.warp?.colour_hex ||
+⨯ TypeError: Cannot read properties of undefined (reading 'length')
+    at DemoPage (src/app/demo/page.tsx:506:43)
+  504 |               </div>
+  505 |               <SimulationExport
+> 506 |                 matrix={store.weaveMatrix.length > 0 ? store.weaveMatrix : store.pegPlanM...
+      |                                           ^
+  507 |                 warpColor={
+  508 |                   store.warpSystem.yarns[0]?.colour_hex ||
+  509 |                   store.warp?.colour_hex || {
+  digest: '618736168'
+}
+ GET /demo? 500 in 202ms (next.js: 5ms, proxy.ts: 23ms, application-code: 174ms)
+[browser] Uncaught TypeError: undefined is not an object (evaluating 'store.weaveMatrix.length')
+    at DemoPage (src/app/demo/page.tsx:506:42)
+  504 |               </div>
+  505 |               <SimulationExport
+> 506 |                 matrix={store.weaveMatrix.length > 0 ? store.weaveMatrix : store.pegPlanM...
+      |                                          ^
+  507 |                 warpColor={
+  508 |                   store.warpSystem.yarns[0]?.colour_hex ||
+  509 |                   store.warp?.colour_hex ||
+⨯ TypeError: Cannot read properties of undefined (reading 'length')
+    at DemoPage (src/app/demo/page.tsx:506:43)
+  504 |               </div>
+  505 |               <SimulationExport
+> 506 |                 matrix={store.weaveMatrix.length > 0 ? store.weaveMatrix : store.pegPlanM...
+      |                                           ^
+  507 |                 warpColor={
+  508 |                   store.warpSystem.yarns[0]?.colour_hex ||
+  509 |                   store.warp?.colour_hex || {
+  digest: '618736168'
+}
+ GET /demo? 500 in 82ms (next.js: 4ms, proxy.ts: 7ms, application-code: 71ms)
+[browser] Uncaught TypeError: undefined is not an object (evaluating 'store.weaveMatrix.length')
+    at DemoPage (src/app/demo/page.tsx:506:42)
+  504 |               </div>
+  505 |               <SimulationExport
+> 506 |                 matrix={store.weaveMatrix.length > 0 ? store.weaveMatrix : store.pegPlanM...
+      |                                          ^
+  507 |                 warpColor={
+  508 |                   store.warpSystem.yarns[0]?.colour_hex ||
+  509 |                   store.warp?.colour_hex ||
+✓ Compiled in 700ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /demo 200 in 144ms (next.js: 14ms, proxy.ts: 12ms, application-code: 117ms)
+ GET /demo 200 in 148ms (next.js: 46ms, proxy.ts: 9ms, application-code: 93ms)
+ GET /demo 200 in 204ms (next.js: 39ms, proxy.ts: 42ms, application-code: 123ms)
+✓ Compiled in 326ms
+✓ Compiled in 159ms
+[Server HMR] Update failed, full reload needed: SyntaxError: Duplicate parameter name not allowed in this context
+    at eval (<anonymous>)
+[Server HMR] Listener error: SyntaxError: Duplicate parameter name not allowed in this context
+    at eval (<anonymous>)
+✓ Compiled in 152ms
+⨯ ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  [90m37 |[0m   repeatH,
+  [90m38 |[0m   readOnly = [36mfalse[0m,
+[31m[1m>[0m [90m39 |[0m   readOnly = [36mfalse[0m,
+  [90m   |[0m   [31m[1m^^^^^^^^[0m
+  [90m40 |[0m   rowColors,
+  [90m41 |[0m   cellColorMap,
+  [90m42 |[0m   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+
+⨯ ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  [90m37 |[0m   repeatH,
+  [90m38 |[0m   readOnly = [36mfalse[0m,
+[31m[1m>[0m [90m39 |[0m   readOnly = [36mfalse[0m,
+  [90m   |[0m   [31m[1m^^^^^^^^[0m
+  [90m40 |[0m   rowColors,
+  [90m41 |[0m   cellColorMap,
+  [90m42 |[0m   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+
+[browser] ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component] 
+[browser] ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component] 
+ GET /demo 500 in 425ms (next.js: 179ms, proxy.ts: 70ms, application-code: 176ms)
+ GET /demo 500 in 353ms (next.js: 336ms, proxy.ts: 4ms, application-code: 13ms)
+[browser] ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component] 
+⨯ ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  [90m37 |[0m   repeatH,
+  [90m38 |[0m   readOnly = [36mfalse[0m,
+[31m[1m>[0m [90m39 |[0m   readOnly = [36mfalse[0m,
+  [90m   |[0m   [31m[1m^^^^^^^^[0m
+  [90m40 |[0m   rowColors,
+  [90m41 |[0m   cellColorMap,
+  [90m42 |[0m   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+
+ GET /demo 500 in 36ms (next.js: 10ms, proxy.ts: 9ms, application-code: 17ms)
+⨯ ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  [90m37 |[0m   repeatH,
+  [90m38 |[0m   readOnly = [36mfalse[0m,
+[31m[1m>[0m [90m39 |[0m   readOnly = [36mfalse[0m,
+  [90m   |[0m   [31m[1m^^^^^^^^[0m
+  [90m40 |[0m   rowColors,
+  [90m41 |[0m   cellColorMap,
+  [90m42 |[0m   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+
+ GET /demo 500 in 50ms (next.js: 24ms, proxy.ts: 4ms, application-code: 21ms)
+[browser] Uncaught Error: ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3)
+    at <unknown> (Error: (./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3)
+[browser] ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component] 
+[browser] ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component] 
+[browser] ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component] 
+[browser] Uncaught Error: ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3)
+    at <unknown> (Error: (./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3)
+[browser] ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx:39:3
+the name `readOnly` is bound more than once in this parameter list
+  37 |   repeatH,
+  38 |   readOnly = false,
+> 39 |   readOnly = false,
+     |   ^^^^^^^^
+  40 |   rowColors,
+  41 |   cellColorMap,
+  42 |   warpColor,
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component Browser]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Desktop/TextileAI/src/components/design/WeaveCanvas.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/components/design/PegPlanEditor.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Client Component SSR]
+    ./Desktop/TextileAI/src/app/demo/page.tsx [Server Component] 
+✓ Compiled in 46ms
+ GET /demo 200 in 491ms (next.js: 136ms, proxy.ts: 10ms, application-code: 345ms)
+ GET /demo 200 in 487ms (next.js: 388ms, proxy.ts: 7ms, application-code: 92ms)
+✓ Compiled in 73ms
+✓ Compiled in 123ms
+ GET /demo 200 in 113ms (next.js: 17ms, proxy.ts: 14ms, application-code: 82ms)
+✓ Compiled in 46ms
+✓ Compiled in 74ms
+✓ Compiled in 143ms
+✓ Compiled in 207ms
+✓ Compiled in 240ms
+✓ Compiled in 188ms
+ GET /demo 200 in 226ms (next.js: 39ms, proxy.ts: 29ms, application-code: 157ms)
+✓ Compiled in 185ms
+✓ Compiled in 156ms
+ GET / 200 in 457ms (next.js: 190ms, proxy.ts: 118ms, application-code: 148ms)
+ GET /demo 200 in 51ms (next.js: 18ms, proxy.ts: 5ms, application-code: 29ms)
+ GET /demo 200 in 227ms (next.js: 11ms, proxy.ts: 11ms, application-code: 205ms)
+✓ Compiled in 273ms
+✓ Compiled in 729ms
+✓ Compiled in 117ms
+✓ Compiled in 145ms
+✓ Compiled in 93ms

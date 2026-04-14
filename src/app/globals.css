@@ -1,60 +1,67 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @import "tailwindcss";
 
 :root {
-  /* ── Apple-inspired Color System ─────────────────────────── */
-  --bg:            #F5F5F7;
-  --bg-secondary:  #FAFAFA;
-  --surface:       #FFFFFF;
+  /* ── Background — clean white ─────────────────────────────── */
+  --bg:             #F5F5F7;
+  --bg-secondary:   #FAFAFA;
+  --surface:        #FFFFFF;
   --surface-raised: #FFFFFF;
 
-  /* Apple Blue */
-  --accent:        #007AFF;
-  --accent-hover:  #0066DD;
-  --accent-light:  rgba(0, 122, 255, 0.10);
-  --accent-ring:   rgba(0, 122, 255, 0.20);
+  /* ── Brand Gradient — from FabricAI logo ─────────────────── */
+  --grad-start:  #FF6B35;            /* logo orange */
+  --grad-mid:    #FF4D7E;            /* logo coral-pink */
+  --grad-end:    #06D6AA;            /* logo teal */
+  --gradient:    linear-gradient(135deg, #FF6B35 0%, #FF4D7E 50%, #06D6AA 100%);
 
-  /* Apple Greens / Reds */
-  --green:         #34C759;
-  --red:           #FF3B30;
+  /* ── Primary Accent — teal (trust, precision) ────────────── */
+  --accent:        #06C49A;
+  --accent-hover:  #05AD88;
+  --accent-light:  rgba(6, 196, 154, 0.10);
+  --accent-ring:   rgba(6, 196, 154, 0.22);
 
-  /* Typography */
+  /* ── Secondary Accent — coral/orange (energy) ────────────── */
+  --accent2:       #FF6B35;
+  --accent2-light: rgba(255, 107, 53, 0.10);
+
+  /* ── Status ──────────────────────────────────────────────── */
+  --green:   #34C759;
+  --red:     #FF3B30;
+  --orange:  #FF9500;
+
+  /* ── Typography ──────────────────────────────────────────── */
   --text-1:  #1D1D1F;
   --text-2:  #6E6E73;
   --text-3:  #86868B;
   --text-4:  #AEAEB2;
 
-  /* Borders */
-  --border:       rgba(0, 0, 0, 0.10);
-  --border-light: rgba(0, 0, 0, 0.06);
-  --border-focus: #007AFF;
+  /* ── Borders ─────────────────────────────────────────────── */
+  --border:        rgba(0, 0, 0, 0.10);
+  --border-light:  rgba(0, 0, 0, 0.06);
+  --border-focus:  #06C49A;
 
-  /* Radius */
-  --radius:    10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  /* ── Radius ──────────────────────────────────────────────── */
+  --radius:     10px;
+  --radius-lg:  14px;
+  --radius-xl:  18px;
   --radius-2xl: 22px;
 
-  /* Shadows — Apple-style soft and diffuse */
+  /* ── Shadows ─────────────────────────────────────────────── */
   --shadow-xs: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
 
-  /* Fonts */
+  /* ── Fonts ───────────────────────────────────────────────── */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
-  /* Input */
+  /* ── Input ───────────────────────────────────────────────── */
   --input-h: 40px;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
   font-family: var(--font-body);
@@ -71,7 +78,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ─── Apple-style Inputs ──────────────────────────────────── */
+/* ─── Inputs ─────────────────────────────────────────────────── */
 
 input[type="text"],
 input[type="number"],
@@ -103,15 +110,20 @@ textarea {
   line-height: 1.65;
 }
 
+input, select, textarea {
+  border-color: rgba(0,0,0,0.12) !important;
+  background: #FAFAFA !important;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-ring);
+  background: #FFFFFF !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-ring) !important;
 }
 
-input::placeholder,
-textarea::placeholder {
+input::placeholder, textarea::placeholder {
   color: var(--text-4);
   font-weight: 400;
 }
@@ -125,7 +137,7 @@ label {
   letter-spacing: -0.005em;
 }
 
-/* ─── Section Headers ─────────────────────────────────────── */
+/* ─── Section Headers ────────────────────────────────────────── */
 
 .section-header {
   font-size: 11px;
@@ -138,7 +150,7 @@ label {
   border-bottom: 1px solid var(--border-light);
 }
 
-/* ─── Buttons ─────────────────────────────────────────────── */
+/* ─── Buttons ────────────────────────────────────────────────── */
 
 .btn-primary {
   display: inline-flex;
@@ -146,23 +158,23 @@ label {
   justify-content: center;
   gap: 6px;
   height: 36px;
-  padding: 0 16px;
-  background: var(--accent);
+  padding: 0 18px;
+  background: var(--gradient);
   color: #fff;
   border: none;
   border-radius: var(--radius);
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
   letter-spacing: -0.01em;
+  box-shadow: 0 2px 10px rgba(255,77,126,0.22);
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.30);
   transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(255,77,126,0.30);
 }
 
 .btn-primary:active {
@@ -191,7 +203,7 @@ label {
 
 .btn-accent:hover {
   background: var(--accent-hover);
-  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.30);
+  box-shadow: 0 4px 14px rgba(6,196,154,0.30);
   transform: translateY(-1px);
 }
 
@@ -213,15 +225,10 @@ label {
   transition: all 0.15s ease;
 }
 
-.btn-secondary:hover {
-  background: rgba(0,0,0,0.09);
-}
+.btn-secondary:hover  { background: rgba(0,0,0,0.09); }
+.btn-secondary:active { background: rgba(0,0,0,0.13); }
 
-.btn-secondary:active {
-  background: rgba(0,0,0,0.13);
-}
-
-/* ─── Pill / Segmented Control ────────────────────────────── */
+/* ─── Pill / Segmented Control ───────────────────────────────── */
 
 .pill-group {
   display: inline-flex;
@@ -252,7 +259,7 @@ label {
   font-weight: 600;
 }
 
-/* ─── Card / Panel ────────────────────────────────────────── */
+/* ─── Cards ──────────────────────────────────────────────────── */
 
 .card {
   background: var(--surface);
@@ -268,76 +275,27 @@ label {
 }
 
 @media (min-width: 768px) {
-  .card {
-    padding: 24px;
-  }
+  .card { padding: 24px; }
 }
 
-.card:hover {
-  box-shadow: var(--shadow-md);
+.card:hover { box-shadow: var(--shadow-md); }
+
+/* ─── Metric Cards ───────────────────────────────────────────── */
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  transition: box-shadow 0.15s, border-color 0.15s;
 }
 
-/* ─── Input Overrides — Apple Clean ───────────────────────── */
-
-input, select, textarea {
-  border-color: rgba(0,0,0,0.12) !important;
-  background: #FAFAFA !important;
+.metric-card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(6,196,154,0.25);
 }
 
-input:focus, select:focus, textarea:focus {
-  background: #FFFFFF !important;
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px var(--accent-ring) !important;
-}
-
-/* ─── Pulse Animation ─────────────────────────────────────── */
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
-}
-
-.pulse-indicator {
-  animation: pulse-dot 2.4s ease-in-out infinite;
-}
-
-/* ─── Scrollbar — macOS style ─────────────────────────────── */
-
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.15);
-  border-radius: 99px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,0,0,0.25);
-}
-
-/* ─── Collapsible ─────────────────────────────────────────── */
-
-.collapsible-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 10px 0;
-  user-select: none;
-  transition: color 0.15s;
-}
-
-.collapsible-header:hover {
-  color: var(--accent);
-}
-
-/* ─── Tab System — Apple Segmented Underline ──────────────── */
+/* ─── Tab System ─────────────────────────────────────────────── */
 
 .tab-bar {
   display: flex;
@@ -361,17 +319,14 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
 }
 
-.tab-btn:hover {
-  color: var(--text-1);
-}
-
+.tab-btn:hover  { color: var(--text-1); }
 .tab-btn.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
   font-weight: 600;
 }
 
-/* ─── Apple-style Form Group Title ───────────────────────── */
+/* ─── Form Group Title ───────────────────────────────────────── */
 
 .form-group-title {
   font-size: 11px;
@@ -382,21 +337,7 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 10px;
 }
 
-/* ─── Metric Cards ────────────────────────────────────────── */
-
-.metric-card {
-  background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px;
-  transition: box-shadow 0.15s;
-}
-
-.metric-card:hover {
-  box-shadow: var(--shadow-sm);
-}
-
-/* ─── Apple-style Range Slider ────────────────────────────── */
+/* ─── Range Slider ───────────────────────────────────────────── */
 
 input[type="range"] {
   -webkit-appearance: none;
@@ -423,15 +364,13 @@ input[type="range"]::-webkit-slider-thumb {
   transition: transform 0.15s;
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
 
 input[type="range"]:focus::-webkit-slider-thumb {
   box-shadow: 0 0 0 4px var(--accent-ring), 0 2px 6px rgba(0,0,0,0.18);
 }
 
-/* ─── Glassmorphism Utility ───────────────────────────────── */
+/* ─── Glassmorphism ──────────────────────────────────────────── */
 
 .glass {
   background: rgba(255,255,255,0.72);
@@ -439,25 +378,47 @@ input[type="range"]:focus::-webkit-slider-thumb {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
-/* ─── Transitions ─────────────────────────────────────────── */
+/* ─── Gradient Text Utility ──────────────────────────────────── */
 
-* {
-  -webkit-tap-highlight-color: transparent;
+.gradient-text {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-button {
-  font-family: var(--font-body);
+/* ─── Scrollbar ──────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(6,196,154,0.35); }
+
+/* ─── Collapsible ────────────────────────────────────────────── */
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 10px 0;
+  user-select: none;
+  transition: color 0.15s;
 }
 
-/* ─── Focus Ring ──────────────────────────────────────────── */
+.collapsible-header:hover { color: var(--accent); }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
+/* ─── Animations ─────────────────────────────────────────────── */
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
 }
 
-/* ─── Modal entrance — Apple sheet spring ─────────────── */
+.pulse-indicator { animation: pulse-dot 2.4s ease-in-out infinite; }
 
 @keyframes modal-in {
   0%   { opacity: 0; transform: scale(0.94) translateY(10px); }
@@ -465,9 +426,19 @@ button {
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* ─── Design Library card hover lift ─────────────────── */
-
 @keyframes card-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ─── Focus Ring ─────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+
+button { font-family: var(--font-body); }
